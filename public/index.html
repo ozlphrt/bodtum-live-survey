@@ -6,136 +6,122 @@
   <title>BODTÜM & ODTÜ | Canlı Yapay Zeka Anketi</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./style.css?v=4">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./style.css?v=5">
 </head>
 <body>
-  <!-- Ambient background glow lights -->
-  <div class="ambient-glow glow-top-right"></div>
-  <div class="ambient-glow glow-bottom-left"></div>
+  <!-- Quiet ambient gradient -->
+  <div class="ambient-subtle"></div>
 
-  <!-- Top Executive Header -->
+  <!-- Minimal Header -->
   <header>
-    <div class="brand-wrapper">
-      <div class="logos-lockup">
-        <!-- Official ODTÜ Emblem -->
-        <img src="./odtu-logo.png" alt="ODTÜ Amblemi" class="odtu-emblem" title="Orta Doğu Teknik Üniversitesi">
-        <div class="logo-divider"></div>
-        <!-- Official BODTÜM Logo -->
-        <img src="./bodtum-logo.png" alt="BODTÜM Logo" class="bodtum-emblem" title="Bodrum ODTÜ Mezunları Derneği">
+    <div class="brand-section">
+      <div class="brand-logos">
+        <img src="./odtu-logo.png" alt="ODTÜ" class="logo-odtu" title="Orta Doğu Teknik Üniversitesi">
+        <div class="logo-sep"></div>
+        <img src="./bodtum-logo.png" alt="BODTÜM" class="logo-bodtum" title="Bodrum ODTÜ Mezunları Derneği">
       </div>
-
-      <div class="brand-text-block">
-        <div class="brand-main-title">
-          <span>Yapay Zeka Canlı Anketi</span>
-          <span class="live-pill">CANLI</span>
-        </div>
-        <div class="brand-sub-title">Bodrum ODTÜ Mezunları Derneği • Gerçek Zamanlı Katılımcı Oylaması</div>
+      <div class="brand-info">
+        <div class="brand-title">Yapay Zeka Canlı Anketi</div>
+        <div class="brand-subtitle">Bodrum ODTÜ Mezunları Derneği</div>
       </div>
     </div>
 
-    <div class="header-status">
-      <div class="badge" id="roomBadge" style="background: rgba(99, 102, 241, 0.12); border-color: rgba(99, 102, 241, 0.35);">
-        🔑 Oda: <strong id="roomCodeText" style="color: #a5b4fc; margin-left: 4px;">...</strong>
+    <div class="header-actions">
+      <div class="pill">
+        <span>Oda:</span>
+        <strong id="roomCodeText">...</strong>
       </div>
-      <div class="badge" id="participantBadge" title="Bağlı canlı katılımcılar">
-        <span class="status-dot"></span>
+      <div class="pill">
+        <span class="indicator-dot"></span>
         <span id="participantCount">0</span> Katılımcı
       </div>
-      <button class="sound-toggle active" id="soundToggle" title="Oylar geldiğinde ses efekti çal">
+      <button class="btn-ghost active" id="soundToggle" title="Oylar geldiğinde ses çal">
         🔔 Ses Açık
       </button>
-      <button class="btn-secondary" id="fullscreenBtn" style="width: auto; padding: 8px 16px;" title="Tam ekran sunum [F]">
+      <button class="btn-ghost" id="fullscreenBtn" title="Tam Ekran">
         ⛶ Tam Ekran
       </button>
     </div>
   </header>
 
-  <!-- Main Presenter Layout -->
-  <main class="presenter-layout">
-    <!-- QR Code Kiosk Card -->
-    <aside class="join-card">
-      <div class="join-step-badge">
-        <span class="status-dot"></span>
-        HIZLI KATILIM
-      </div>
-      <h3>Katılmak İçin Tara</h3>
-      <p>Telefon kameranızla QR kodu taratın. Kayıt veya uygulama indirme gerekmez!</p>
+  <!-- Main Presenter View -->
+  <main class="main-wrapper">
+    <!-- Left: QR Code & Join Kiosk Card -->
+    <aside class="join-panel">
+      <div class="join-eyebrow">Canlı Oylama</div>
+      <h2 class="join-heading">Katılmak İçin Tara</h2>
+      <p class="join-desc">Telefonunuzun kamerası ile QR kodu okutun. Kayıt veya uygulama gerekmez.</p>
 
-      <div class="qr-frame">
-        <div id="qrcodeBox" style="width: 210px; height: 210px; display: flex; align-items: center; justify-content: center; background: #ffffff; border-radius: 12px; overflow: hidden; padding: 8px; box-sizing: border-box;">
-          <!-- Crisp Vector SVG QR Code generated client-side -->
+      <div class="qr-container">
+        <div id="qrcodeBox" style="width: 180px; height: 180px; display: flex; align-items: center; justify-content: center;">
+          <!-- Vector SVG QR code injected here -->
         </div>
       </div>
 
-      <div class="join-url-box">
-        <span class="join-url-text" id="joinUrlText">Bağlantı hazırlanıyor...</span>
-        <button class="copy-btn" id="copyUrlBtn">Kopyala</button>
+      <div class="link-row">
+        <span class="link-text" id="joinUrlText">Bağlantı hazırlanıyor...</span>
+        <button class="btn-copy" id="copyUrlBtn">Kopyala</button>
       </div>
 
-      <div class="quick-tools">
-        <button class="btn-secondary" id="openSimulatorBtn">
-          📱 Mobil Önizleme Simülatörü
+      <div class="panel-actions">
+        <button class="btn-panel" id="openSimulatorBtn">
+          📱 Mobil Önizleme
         </button>
-        <button class="btn-secondary" id="openTabBtn">
-          ↗ Oylama Ekranını Yeni Sekmede Aç
+        <button class="btn-panel" id="openTabBtn">
+          ↗ Ayrı Sekmede Aç
         </button>
       </div>
     </aside>
 
-    <!-- Main Presentation Stage -->
-    <section class="presentation-main">
-      <div class="question-stage" id="questionStage">
-        <!-- Question Meta & Title -->
+    <!-- Right: Stage Area -->
+    <section class="stage-area">
+      <div class="stage-card">
         <div class="stage-header">
           <div>
-            <div class="question-meta">
-              <span class="question-index-tag" id="qIndexTag">Soru 1 / 3</span>
-              <span class="question-type-tag" id="qTypeTag">Tek Seçim</span>
-              <span class="badge" id="lockStatusBadge" style="display: none; background: rgba(239, 68, 68, 0.15); border-color: rgba(239, 68, 68, 0.4); color: #fca5a5;">
-                🔒 Oylama Duraklatıldı
-              </span>
+            <div class="stage-eyebrows">
+              <span class="tag-counter" id="qIndexTag">Soru 1 / 3</span>
+              <span class="tag-type" id="qTypeTag">Tek Seçim</span>
+              <span class="tag-locked" id="lockStatusBadge" style="display: none;">🔒 Oylama Duraklatıldı</span>
             </div>
-            <h1 class="question-title" id="qTitle">Anket yükleniyor...</h1>
+            <h1 class="stage-title" id="qTitle">Anket yükleniyor...</h1>
+            <div class="stage-subtitle" id="qSubtitle"></div>
           </div>
 
-          <div class="live-votes-badge">
-            <span class="votes-count-number" id="qVoteTotal">0</span>
-            <span class="votes-count-label">Cevap</span>
+          <div class="vote-stat">
+            <span class="vote-number" id="qVoteTotal">0</span>
+            <span class="vote-label">Cevap</span>
           </div>
         </div>
 
-        <!-- Dynamic Results Container -->
-        <div class="results-container" id="resultsContainer">
-          <div class="empty-state">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-            </svg>
+        <!-- Dynamic Results List -->
+        <div class="options-list" id="resultsContainer">
+          <div class="empty-box">
             <p>Katılımcıların cevap vermesi bekleniyor...</p>
           </div>
         </div>
       </div>
 
-      <!-- Presenter Action Toolbar (Clicker Deck) -->
-      <footer class="presenter-toolbar">
-        <div class="nav-controls">
-          <button class="btn-secondary" id="prevBtn" style="width: auto;">
-            ◀ Önceki Soru <span class="key-hint">←</span>
+      <!-- Presenter Toolbar -->
+      <footer class="toolbar">
+        <div class="toolbar-group">
+          <button class="btn-secondary" id="prevBtn">
+            ◀ Önceki Soru <span class="keycap">←</span>
           </button>
           <button class="btn-primary" id="nextBtn">
-            Sonraki Soru ▶ <span class="key-hint" style="background: rgba(255,255,255,0.25); border-color: rgba(255,255,255,0.4); color: #fff;">→</span>
+            Sonraki Soru ▶ <span class="keycap">→</span>
           </button>
         </div>
 
-        <div class="tool-group">
-          <button class="btn-secondary" id="toggleLockBtn" style="width: auto;">
-            🔒 Oylamayı Kilitle <span class="key-hint">L</span>
+        <div class="toolbar-group">
+          <button class="btn-secondary" id="toggleLockBtn">
+            🔒 Oylamayı Kilitle <span class="keycap">L</span>
           </button>
-          <button class="btn-secondary" id="addQuestionBtn" style="width: auto;">
-            ➕ Yeni Soru Ekle
+          <button class="btn-secondary" id="addQuestionBtn">
+            ➕ Soru Ekle
           </button>
           <button class="btn-danger" id="resetBtn">
-            ↺ Sonuçları Sıfırla
+            ↺ Sıfırla
           </button>
         </div>
       </footer>
@@ -143,48 +129,46 @@
   </main>
 
   <!-- Mobile Phone Simulator Drawer -->
-  <div class="simulator-drawer hidden" id="simulatorDrawer">
-    <div class="simulator-header">
-      <span class="simulator-title">📱 Canlı Katılımcı Önizlemesi</span>
-      <button class="simulator-close" id="closeSimulatorBtn">&times;</button>
+  <div class="sim-drawer hidden" id="simulatorDrawer">
+    <div class="sim-header">
+      <span class="sim-title">📱 Mobil Katılımcı Ekranı</span>
+      <button class="sim-close" id="closeSimulatorBtn">&times;</button>
     </div>
-    <iframe class="simulator-frame" id="simulatorFrame" src="./vote.html"></iframe>
+    <iframe class="sim-frame" id="simulatorFrame" src="./vote.html"></iframe>
   </div>
 
   <!-- Add Question Modal -->
-  <dialog id="questionModal" style="background: #111827; color: #fff; border: 1px solid rgba(255,255,255,0.15); border-radius: 20px; padding: 28px; width: 90%; max-width: 520px; margin: auto; backdrop-filter: blur(25px); box-shadow: 0 25px 60px rgba(0,0,0,0.85);">
-    <h3 style="margin-bottom: 16px; font-size: 1.4rem; font-weight: 800;">Yeni Soru Ekle</h3>
+  <dialog id="questionModal" style="background: var(--surface); color: #fff; border: 1px solid var(--border-strong); border-radius: var(--radius-lg); padding: 28px; width: 90%; max-width: 480px; margin: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.8);">
+    <h3 style="margin-bottom: 16px; font-size: 1.25rem; font-weight: 600;">Yeni Soru Ekle</h3>
     <form id="newQuestionForm" method="dialog" style="display: flex; flex-direction: column; gap: 14px;">
       <div>
-        <label style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px;">Soru Başlığı</label>
-        <input type="text" id="modalQTitle" required placeholder="Örn: Yapay zekayı en çok nerede faydalı buluyorsunuz?" style="width: 100%; padding: 12px 14px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; color: #fff; font-size: 0.95rem;">
+        <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 6px;">Soru Başlığı</label>
+        <input type="text" id="modalQTitle" required placeholder="Sorunuzu yazın..." style="width: 100%; padding: 10px 14px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); color: #fff; font-size: 0.9rem; outline: none;">
       </div>
 
       <div>
-        <label style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px;">Soru Tipi</label>
-        <select id="modalQType" style="width: 100%; padding: 12px 14px; background: #1e293b; border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; color: #fff; font-size: 0.95rem;">
+        <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 6px;">Soru Tipi</label>
+        <select id="modalQType" style="width: 100%; padding: 10px 14px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); color: #fff; font-size: 0.9rem;">
           <option value="single">Tek Seçimli Anket</option>
           <option value="multi">Çoklu Seçim (Birden fazla seçilebilir)</option>
-          <option value="rating">1 - 5 Yıldız Değerlendirme</option>
-          <option value="wordcloud">Açık Uçlu / Kelime Bulutu</option>
         </select>
       </div>
 
       <div id="modalOptionsGroup">
-        <label style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px;">Seçenekler (Her satıra bir seçenek)</label>
-        <textarea id="modalQOptions" rows="4" placeholder="Seçenek 1&#10;Seçenek 2&#10;Seçenek 3" style="width: 100%; padding: 12px 14px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; color: #fff; font-size: 0.95rem; resize: vertical;"></textarea>
+        <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 6px;">Seçenekler (Her satıra bir seçenek)</label>
+        <textarea id="modalQOptions" rows="4" placeholder="Seçenek 1&#10;Seçenek 2&#10;Seçenek 3" style="width: 100%; padding: 10px 14px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); color: #fff; font-size: 0.9rem; resize: vertical; outline: none;"></textarea>
       </div>
 
       <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
-        <button type="button" id="modalCancelBtn" class="btn-secondary" style="width: auto;">İptal</button>
-        <button type="submit" class="btn-primary">Soruyu Ekle</button>
+        <button type="button" id="modalCancelBtn" class="btn-secondary">İptal</button>
+        <button type="submit" class="btn-primary">Ekle</button>
       </div>
     </form>
   </dialog>
 
   <!-- Local Self-Contained Vector QR Code Generator & Real-Time Sync -->
-  <script src="./qrcode.js?v=4"></script>
+  <script src="./qrcode.js?v=5"></script>
   <script src="https://cdn.jsdelivr.net/npm/mqtt@5.3.5/dist/mqtt.min.js"></script>
-  <script src="./app.js?v=4"></script>
+  <script src="./app.js?v=5"></script>
 </body>
 </html>

@@ -273,8 +273,8 @@ function renderQrCode(url) {
       qr.addData(url);
       qr.make();
       box.innerHTML = qr.createSvgTag({
-        cellSize: 6,
-        margin: 1,
+        cellSize: 4,
+        margin: 0,
         scalable: true
       });
       const svg = box.querySelector('svg');
@@ -290,7 +290,7 @@ function renderQrCode(url) {
   }
 
   // Fallback to direct image
-  box.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(url)}" style="width: 100%; height: 100%; display: block; border-radius: 8px;" alt="QR Code" />`;
+  box.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(url)}" style="width: 100%; height: 100%; display: block;" alt="QR Code" />`;
 }
 
 renderQrCode(voterJoinUrl);
@@ -419,23 +419,31 @@ function renderSurvey() {
   if (!activeQ) return;
 
   qIndexTag.textContent = `Soru ${survey.activeQuestionIndex + 1} / ${survey.questions.length}`;
-  qTypeTag.textContent = activeQ.type === 'single' ? 'Tek Seçim' : (activeQ.type === 'multi' ? 'Çoklu Seçim (Birden Fazla)' : 'Yıldız');
-  qTitle.innerHTML = activeQ.title + (activeQ.subtitle ? `<br><span style="font-size: 1.05rem; font-weight: 500; color: var(--secondary);">${activeQ.subtitle}</span>` : '');
+  qTypeTag.textContent = activeQ.type === 'single' ? 'Tek Seçim' : (activeQ.type === 'multi' ? 'Çoklu Seçim (Birden Fazla)' : 'Değerlendirme');
+  
+  qTitle.textContent = activeQ.title;
+  const subEl = document.getElementById('qSubtitle');
+  if (subEl) {
+    subEl.textContent = activeQ.subtitle || '';
+    subEl.style.display = activeQ.subtitle ? 'block' : 'none';
+  }
 
   const totalVotes = Object.keys(activeQ.votes || {}).length;
   qVoteTotal.textContent = totalVotes;
 
   if (!survey.acceptingVotes) {
-    lockStatusBadge.style.display = 'inline-flex';
-    toggleLockBtn.textContent = '🔓 Oylamayı Aç';
+    lockStatusBadge.style.display = 'inline-block';
+    toggleLockBtn.innerHTML = '🔓 Oylamayı Aç <span class="keycap">L</span>';
   } else {
     lockStatusBadge.style.display = 'none';
-    toggleLockBtn.textContent = '🔒 Oylamayı Kilitle';
+    toggleLockBtn.innerHTML = '🔒 Oylamayı Kilitle <span class="keycap">L</span>';
   }
 
   prevBtn.disabled = survey.activeQuestionIndex === 0;
   prevBtn.style.opacity = survey.activeQuestionIndex === 0 ? '0.4' : '1';
-  nextBtn.textContent = survey.activeQuestionIndex === survey.questions.length - 1 ? 'Anket Tamamlandı' : 'Sonraki Soru ▶';
+  nextBtn.innerHTML = survey.activeQuestionIndex === survey.questions.length - 1 
+    ? 'Tamamlandı' 
+    : 'Sonraki Soru ▶ <span class="keycap" style="background: rgba(0,0,0,0.2); color:#000;">→</span>';
 
   const results = calculateResults(activeQ);
   if (activeQ.type === 'single' || activeQ.type === 'multi') renderOptionsBreakdown(results);
@@ -455,17 +463,16 @@ function renderOptionsBreakdown(results) {
     const letter = LETTERS[idx] || (idx + 1);
 
     return `
-      <div class="option-result-row ${item.count > 0 ? 'has-votes' : ''}">
-        <div class="result-bar-fill ${isLead ? 'lead-option' : ''}" style="width: ${item.percentage}%;"></div>
-        <div class="result-content">
-          <div class="option-label-group">
-            <div class="option-letter-badge">${letter}</div>
-            <div class="option-label-text">${escapeHtml(item.text)}</div>
+      <div class="option-row ${isLead && results.totalVotes > 1 ? 'lead' : ''}">
+        <div class="option-bar-bg" style="width: ${item.percentage}%;"></div>
+        <div class="option-content">
+          <div class="option-left">
+            <div class="option-idx">${letter}</div>
+            <div class="option-text">${escapeHtml(item.text)}</div>
           </div>
-          <div class="option-stats">
-            ${isLead && results.totalVotes > 1 ? '<span class="lead-crown-badge">👑 Lider</span>' : ''}
-            <span class="option-count-badge">${item.count} ${item.count === 1 ? 'oy' : 'oy'}</span>
-            <span class="option-percentage">${item.percentage}%</span>
+          <div class="option-right">
+            <span class="option-count">${item.count} oy</span>
+            <span class="option-percent">${item.percentage}%</span>
           </div>
         </div>
       </div>

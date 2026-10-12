@@ -73,7 +73,12 @@ function renderQuestion(state) {
 
   activeQuestionView.style.display = 'block';
   votedFeedbackView.style.display = 'none';
-  voterQTitle.innerHTML = activeQ.title + (activeQ.subtitle ? `<div class="voter-q-subtitle">${activeQ.subtitle}</div>` : '');
+  voterQTitle.textContent = activeQ.title;
+  const subEl = document.getElementById('voterQSubtitle');
+  if (subEl) {
+    subEl.textContent = activeQ.subtitle || '';
+    subEl.style.display = activeQ.subtitle ? 'block' : 'none';
+  }
 
   if (activeQ.type === 'single') {
     renderSingleOptions(activeQ.options);
@@ -88,29 +93,28 @@ function renderQuestion(state) {
 
 // Single Choice Options
 function renderSingleOptions(options) {
-  let html = '<div class="options-grid">';
+  let html = '';
   options.forEach(opt => {
     const isSelected = selectedAnswer === opt.id;
     html += `
-      <button type="button" class="option-btn ${isSelected ? 'selected' : ''}" data-id="${opt.id}">
+      <button type="button" class="voter-opt-btn ${isSelected ? 'selected' : ''}" data-id="${opt.id}">
         <span>${escapeHtml(opt.text)}</span>
-        <div class="option-check">${isSelected ? '✓' : ''}</div>
+        <div class="opt-circle">${isSelected ? '✓' : ''}</div>
       </button>
     `;
   });
-  html += '</div>';
   voterInputArea.innerHTML = html;
 
-  const buttons = voterInputArea.querySelectorAll('.option-btn');
+  const buttons = voterInputArea.querySelectorAll('.voter-opt-btn');
   buttons.forEach(btn => {
     btn.addEventListener('click', () => {
       selectedAnswer = btn.getAttribute('data-id');
       buttons.forEach(b => {
         b.classList.remove('selected');
-        b.querySelector('.option-check').textContent = '';
+        b.querySelector('.opt-circle').textContent = '';
       });
       btn.classList.add('selected');
-      btn.querySelector('.option-check').textContent = '✓';
+      btn.querySelector('.opt-circle').textContent = '✓';
       voterSubmitBtn.disabled = false;
     });
   });
@@ -120,20 +124,19 @@ function renderSingleOptions(options) {
 function renderMultiOptions(options) {
   if (!Array.isArray(selectedAnswer)) selectedAnswer = [];
 
-  let html = '<div class="options-grid">';
+  let html = '';
   options.forEach(opt => {
     const isSelected = selectedAnswer.includes(opt.id);
     html += `
-      <button type="button" class="option-btn ${isSelected ? 'selected' : ''}" data-id="${opt.id}">
+      <button type="button" class="voter-opt-btn ${isSelected ? 'selected' : ''}" data-id="${opt.id}">
         <span>${escapeHtml(opt.text)}</span>
-        <div class="option-check">${isSelected ? '✓' : ''}</div>
+        <div class="opt-circle">${isSelected ? '✓' : ''}</div>
       </button>
     `;
   });
-  html += '</div>';
   voterInputArea.innerHTML = html;
 
-  const buttons = voterInputArea.querySelectorAll('.option-btn');
+  const buttons = voterInputArea.querySelectorAll('.voter-opt-btn');
   buttons.forEach(btn => {
     btn.addEventListener('click', () => {
       const optId = btn.getAttribute('data-id');
@@ -141,11 +144,11 @@ function renderMultiOptions(options) {
       if (idx > -1) {
         selectedAnswer.splice(idx, 1);
         btn.classList.remove('selected');
-        btn.querySelector('.option-check').textContent = '';
+        btn.querySelector('.opt-circle').textContent = '';
       } else {
         selectedAnswer.push(optId);
         btn.classList.add('selected');
-        btn.querySelector('.option-check').textContent = '✓';
+        btn.querySelector('.opt-circle').textContent = '✓';
       }
       voterSubmitBtn.disabled = selectedAnswer.length === 0;
     });
@@ -254,13 +257,13 @@ function renderMobileResults(q) {
     voterLiveResults.innerHTML = breakdown.map(item => {
       const isMyChoice = Array.isArray(selectedAnswer) ? selectedAnswer.includes(item.id) : selectedAnswer === item.id;
       return `
-        <div style="background: rgba(15,23,42,0.6); padding: 12px 14px; border-radius: 10px; margin-bottom: 8px; border: 1px solid ${isMyChoice ? 'var(--secondary)' : 'var(--card-border)'};">
-          <div style="display: flex; justify-content: space-between; font-size: 0.92rem; font-weight: 600; margin-bottom: 6px;">
-            <span>${escapeHtml(item.text)} ${isMyChoice ? '⭐ (Seçiminiz)' : ''}</span>
-            <span style="color: var(--secondary);">${item.percentage}%</span>
+        <div style="background: var(--surface-raised); padding: 12px 14px; border-radius: var(--radius-md); margin-bottom: 8px; border: 1px solid ${isMyChoice ? 'var(--accent-blue)' : 'var(--border)'};">
+          <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem; font-weight: 500; margin-bottom: 8px;">
+            <span style="color: ${isMyChoice ? '#fff' : 'var(--text-secondary)'};">${escapeHtml(item.text)} ${isMyChoice ? '<span style="color: var(--accent-blue); font-size: 0.75rem; margin-left: 4px;">● Seçiminiz</span>' : ''}</span>
+            <span style="font-weight: 600; color: #fff; font-feature-settings: 'tnum';">${item.percentage}%</span>
           </div>
-          <div style="height: 6px; background: rgba(255,255,255,0.1); border-radius: 999px; overflow: hidden;">
-            <div style="width: ${item.percentage}%; height: 100%; background: linear-gradient(90deg, var(--primary), var(--secondary)); border-radius: 999px;"></div>
+          <div style="height: 6px; background: rgba(255,255,255,0.06); border-radius: 999px; overflow: hidden;">
+            <div style="width: ${item.percentage}%; height: 100%; background: var(--accent-blue); border-radius: 999px; transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);"></div>
           </div>
         </div>
       `;

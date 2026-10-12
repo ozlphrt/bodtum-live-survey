@@ -3,32 +3,21 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>BODTÜM Canlı Oylama</title>
+  <title>BODTÜM & ODTÜ | Canlı Oylama</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./style.css?v=3">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./style.css?v=5">
   <style>
-    /* Voter Mobile Optimized Styles */
-    body {
-      background: #080c14;
-      padding: 0;
-      margin: 0;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
-
+    /* Voter Screen Minimal Layout */
     .voter-container {
       width: 100%;
-      max-width: 520px;
+      max-width: 480px;
       margin: 0 auto;
       padding: 20px;
       display: flex;
       flex-direction: column;
       flex: 1;
-      position: relative;
-      z-index: 10;
     }
 
     .voter-header {
@@ -36,260 +25,152 @@
       align-items: center;
       justify-content: space-between;
       padding: 12px 0 20px 0;
-      border-bottom: 1px solid var(--card-border);
+      border-bottom: 1px solid var(--border);
       margin-bottom: 24px;
     }
 
     .voter-brand {
-      font-weight: 800;
-      font-size: 1.15rem;
-      letter-spacing: 0.5px;
-      background: linear-gradient(135deg, var(--primary), var(--secondary));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
 
-    .voter-progress {
-      font-size: 0.82rem;
-      color: var(--text-muted);
-      background: rgba(255, 255, 255, 0.05);
-      padding: 4px 10px;
-      border-radius: 999px;
-      border: 1px solid var(--card-border);
-    }
-
-    .vote-question-card {
-      background: var(--card-bg);
-      backdrop-filter: blur(25px);
-      border: 1px solid var(--card-border);
-      border-radius: var(--radius-lg);
+    .voter-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
       padding: 24px;
-      box-shadow: var(--shadow-lg);
       margin-bottom: 20px;
     }
 
-    .voter-q-title {
-      font-size: 1.35rem;
-      font-weight: 700;
+    .voter-title {
+      font-size: 1.25rem;
+      font-weight: 600;
       line-height: 1.35;
       color: #fff;
+      letter-spacing: -0.01em;
+      margin-bottom: 6px;
+    }
+
+    .voter-sub {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
       margin-bottom: 20px;
     }
 
-    .voter-q-subtitle {
-      font-size: 0.88rem;
-      color: var(--secondary);
-      font-weight: 600;
-      margin-top: 4px;
-    }
-
-    /* Option Tap Buttons */
-    .options-grid {
+    /* Options Tap Targets */
+    .voter-options {
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 10px;
     }
 
-    .option-btn {
-      position: relative;
-      background: rgba(255, 255, 255, 0.04);
-      border: 1.5px solid var(--card-border);
+    .voter-opt-btn {
+      background: var(--surface-raised);
+      border: 1px solid var(--border);
       border-radius: var(--radius-md);
-      padding: 16px 18px;
-      color: var(--text-main);
-      font-size: 1.02rem;
-      font-weight: 600;
+      padding: 14px 16px;
+      color: var(--text-primary);
+      font-size: 0.95rem;
+      font-weight: 500;
+      font-family: inherit;
       text-align: left;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 12px;
-      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: all var(--transition);
       -webkit-tap-highlight-color: transparent;
     }
 
-    .option-btn:hover {
-      background: rgba(255, 255, 255, 0.08);
-      border-color: rgba(99, 102, 241, 0.4);
+    .voter-opt-btn:hover {
+      border-color: var(--border-strong);
     }
 
-    .option-btn:active {
-      transform: scale(0.98);
+    .voter-opt-btn.selected {
+      background: rgba(37, 99, 235, 0.15);
+      border-color: #3b82f6;
+      color: #ffffff;
     }
 
-    .option-btn.selected {
-      background: linear-gradient(135deg, rgba(99, 102, 241, 0.25), rgba(6, 182, 212, 0.25));
-      border-color: var(--secondary);
-      box-shadow: 0 0 20px rgba(6, 182, 212, 0.3);
-      color: #fff;
-    }
-
-    .option-check {
-      width: 24px;
-      height: 24px;
+    .opt-circle {
+      width: 20px;
+      height: 20px;
       border-radius: 50%;
-      border: 2px solid rgba(255, 255, 255, 0.2);
+      border: 1.5px solid var(--border-strong);
       display: flex;
       align-items: center;
       justify-content: center;
-      flex-shrink: 0;
-      transition: all 0.2s ease;
-      font-size: 0.85rem;
-    }
-
-    .option-btn.selected .option-check {
-      background: var(--secondary);
-      border-color: var(--secondary);
-      color: #080c14;
-      font-weight: 800;
-    }
-
-    /* Rating Stars Buttons */
-    .rating-row-interactive {
-      display: flex;
-      justify-content: space-between;
-      gap: 8px;
-      margin: 16px 0;
-    }
-
-    .star-btn {
-      flex: 1;
-      height: 64px;
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid var(--card-border);
-      border-radius: var(--radius-md);
-      color: #94a3b8;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 4px;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-
-    .star-btn .star-icon {
-      font-size: 1.4rem;
-    }
-
-    .star-btn .star-num {
       font-size: 0.75rem;
-      font-weight: 700;
+      flex-shrink: 0;
+      transition: all var(--transition);
     }
 
-    .star-btn.active, .star-btn:hover {
-      background: rgba(245, 158, 11, 0.15);
-      border-color: var(--accent-amber);
-      color: var(--accent-amber);
-      transform: translateY(-2px);
+    .voter-opt-btn.selected .opt-circle {
+      background: #3b82f6;
+      border-color: #3b82f6;
+      color: #fff;
     }
 
-    .rating-label-hint {
-      text-align: center;
-      font-size: 0.95rem;
+    .btn-submit {
+      width: 100%;
+      padding: 14px;
+      font-size: 1rem;
       font-weight: 600;
-      color: var(--accent-amber);
-      min-height: 24px;
-      margin-top: 10px;
-    }
-
-    /* Text Input Box */
-    .word-input-container {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-
-    .text-input-field {
-      width: 100%;
-      background: rgba(0, 0, 0, 0.4);
-      border: 1.5px solid var(--card-border);
       border-radius: var(--radius-md);
-      padding: 16px;
-      color: #fff;
-      font-size: 1.1rem;
-      font-family: inherit;
-      outline: none;
-      transition: border-color 0.2s ease;
-    }
-
-    .text-input-field:focus {
-      border-color: var(--secondary);
-      box-shadow: 0 0 15px var(--secondary-glow);
-    }
-
-    /* Submit Button */
-    .voter-submit-btn {
-      width: 100%;
-      padding: 16px;
-      font-size: 1.1rem;
-      font-weight: 700;
-      border-radius: var(--radius-md);
-      margin-top: 16px;
-      background: linear-gradient(135deg, var(--primary), var(--secondary));
-      color: #fff;
+      background: #ffffff;
+      color: #090b10;
       border: none;
       cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      box-shadow: 0 6px 20px var(--primary-glow);
-      transition: all 0.2s ease;
+      margin-top: 14px;
+      transition: all var(--transition);
     }
 
-    .voter-submit-btn:disabled {
-      opacity: 0.45;
+    .btn-submit:disabled {
+      opacity: 0.4;
       cursor: not-allowed;
-      transform: none !important;
-      box-shadow: none !important;
     }
 
-    /* Voted Success State */
-    .voted-feedback-card {
-      background: rgba(16, 185, 129, 0.08);
-      border: 1px solid rgba(16, 185, 129, 0.3);
-      border-radius: var(--radius-lg);
-      padding: 28px 20px;
+    /* Voted State */
+    .success-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: 32px 24px;
       text-align: center;
-      margin-bottom: 24px;
-      animation: fadeIn 0.4s ease;
+      margin-bottom: 20px;
     }
 
-    .success-icon-badge {
-      width: 60px;
-      height: 60px;
-      background: var(--accent-green);
-      color: #080c14;
+    .success-icon {
+      width: 48px;
+      height: 48px;
       border-radius: 50%;
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: var(--status-green);
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.8rem;
-      font-weight: 900;
-      margin-bottom: 16px;
-      box-shadow: 0 0 25px rgba(16, 185, 129, 0.4);
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin-bottom: 14px;
     }
 
-    .waiting-bar {
-      margin-top: 20px;
-      padding: 12px;
-      background: rgba(255, 255, 255, 0.04);
-      border-radius: var(--radius-md);
-      font-size: 0.85rem;
-      color: var(--text-muted);
-      display: flex;
+    .waiting-text {
+      display: inline-flex;
       align-items: center;
-      justify-content: center;
-      gap: 10px;
+      gap: 8px;
+      font-size: 0.8rem;
+      color: var(--text-tertiary);
+      margin-top: 14px;
     }
 
-    .spinner {
-      width: 14px;
-      height: 14px;
-      border: 2px solid rgba(255, 255, 255, 0.2);
-      border-top-color: var(--secondary);
+    .spinner-sm {
+      width: 12px;
+      height: 12px;
+      border: 2px solid var(--border);
+      border-top-color: var(--text-primary);
       border-radius: 50%;
       animation: spin 1s infinite linear;
     }
@@ -300,74 +181,63 @@
   </style>
 </head>
 <body>
-  <!-- Ambient background glow -->
-  <div class="ambient-glow glow-top-right"></div>
-  <div class="ambient-glow glow-bottom-left"></div>
-
   <div class="voter-container">
-    <!-- Header -->
-    <header class="voter-header" style="background: none; border-bottom: 1px solid var(--card-border); padding: 0 0 16px 0;">
-      <div style="display: flex; align-items: center; gap: 12px;">
-        <div style="display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.06); padding: 4px 10px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1);">
-          <img src="./odtu-logo.png" alt="ODTÜ" style="height: 30px; width: 30px; object-fit: contain;">
-          <div style="width: 1px; height: 22px; background: rgba(255,255,255,0.2);"></div>
-          <img src="./bodtum-logo.png" alt="BODTÜM" style="height: 30px; width: auto; object-fit: contain;">
-        </div>
-        <div class="voter-brand">BODTÜM & ODTÜ</div>
+    <!-- Clean Header -->
+    <header class="voter-header" style="background: none; border-bottom: 1px solid var(--border); padding: 0 0 16px 0;">
+      <div class="voter-brand">
+        <img src="./odtu-logo.png" alt="ODTÜ" style="height: 28px; width: auto;">
+        <div style="width: 1px; height: 18px; background: var(--border-strong);"></div>
+        <img src="./bodtum-logo.png" alt="BODTÜM" style="height: 28px; width: auto;">
       </div>
-      <div class="voter-progress" id="voterProgressTag">Bağlanıyor...</div>
+      <div class="pill" id="voterProgressTag" style="padding: 4px 10px; font-size: 0.75rem;">Bağlanıyor...</div>
     </header>
 
-    <!-- Question View (When answering) -->
+    <!-- Question View -->
     <div id="activeQuestionView">
-      <div class="vote-question-card">
-        <h2 class="voter-q-title" id="voterQTitle">Soru yükleniyor...</h2>
-        <div id="voterInputArea">
+      <div class="voter-card">
+        <h2 class="voter-title" id="voterQTitle">Soru yükleniyor...</h2>
+        <div class="voter-sub" id="voterQSubtitle"></div>
+        <div class="voter-options" id="voterInputArea">
           <!-- Dynamically injected choices -->
         </div>
       </div>
 
-      <button class="voter-submit-btn" id="voterSubmitBtn" disabled>
-        Cevabı Gönder 🚀
+      <button class="btn-submit" id="voterSubmitBtn" disabled>
+        Cevabı Gönder
       </button>
     </div>
 
-    <!-- Feedback View (After submitting response) -->
+    <!-- Feedback View -->
     <div id="votedFeedbackView" style="display: none;">
-      <div class="voted-feedback-card">
-        <div class="success-icon-badge">✓</div>
-        <h3 style="font-size: 1.4rem; font-weight: 700; color: #fff; margin-bottom: 6px;">Cevabınız Kaydedildi!</h3>
-        <p style="color: var(--text-muted); font-size: 0.95rem;">Teşekkürler! Oyunuz canlı sonuç ekranına anında eklendi.</p>
-        
-        <div class="waiting-bar">
-          <div class="spinner"></div>
-          <span>Sunucunun bir sonraki soruya geçmesi bekleniyor...</span>
+      <div class="success-box">
+        <div class="success-icon">✓</div>
+        <h3 style="font-size: 1.25rem; font-weight: 600; color: #fff; margin-bottom: 4px;">Cevabınız Kaydedildi</h3>
+        <p style="color: var(--text-secondary); font-size: 0.86rem;">Oyunuz canlı sunum ekranına yansıtıldı.</p>
+        <div class="waiting-text">
+          <div class="spinner-sm"></div>
+          <span>Sonraki soru bekleniyor...</span>
         </div>
       </div>
 
-      <!-- Live Results Preview on Phone -->
-      <div class="vote-question-card">
-        <div style="font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--secondary); margin-bottom: 14px;">
-          📊 Canlı Katılımcı Dağılımı
+      <!-- Live Crowd Breakdown -->
+      <div class="voter-card">
+        <div style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-tertiary); margin-bottom: 14px;">
+          Katılımcı Dağılımı
         </div>
-        <div id="voterLiveResults">
-          <!-- Injected bar percentages -->
-        </div>
+        <div id="voterLiveResults"></div>
       </div>
     </div>
 
-    <!-- Locked Voting View -->
+    <!-- Locked View -->
     <div id="lockedView" style="display: none;">
-      <div class="vote-question-card" style="text-align: center; padding: 40px 20px;">
-        <div style="font-size: 2.5rem; margin-bottom: 12px;">🔒</div>
-        <h3 style="font-size: 1.3rem; margin-bottom: 8px;">Oylama Şu Anda Duraklatıldı</h3>
-        <p style="color: var(--text-muted); font-size: 0.9rem;">Sunucu oylamayı geçici olarak kilitledi. Ekranı kapatmayın; açıldığında otomatik güncellenecektir.</p>
+      <div class="voter-card" style="text-align: center; padding: 40px 20px;">
+        <h3 style="font-size: 1.15rem; margin-bottom: 6px;">Oylama Duraklatıldı</h3>
+        <p style="color: var(--text-secondary); font-size: 0.85rem;">Sunucu oylamayı geçici olarak durdurdu.</p>
       </div>
     </div>
   </div>
 
-  <!-- Pure Serverless Real-Time Client Library -->
   <script src="https://cdn.jsdelivr.net/npm/mqtt@5.3.5/dist/mqtt.min.js"></script>
-  <script src="./vote.js?v=3"></script>
+  <script src="./vote.js?v=5"></script>
 </body>
 </html>

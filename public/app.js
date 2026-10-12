@@ -125,6 +125,11 @@ try {
   }
 } catch (e) {}
 
+if (!survey.resetEpoch) {
+  survey.resetEpoch = Date.now();
+  saveSurvey();
+}
+
 let activeParticipants = new Set();
 
 function saveSurvey() {
@@ -205,6 +210,7 @@ function getSurveyPayload() {
   const activeQ = survey.questions[survey.activeQuestionIndex];
   return {
     title: survey.title,
+    resetEpoch: survey.resetEpoch || 1,
     activeQuestionIndex: survey.activeQuestionIndex,
     totalQuestions: survey.questions.length,
     acceptingVotes: survey.acceptingVotes,
@@ -379,8 +385,13 @@ newQuestionForm.addEventListener('submit', (e) => {
 // Reset Survey
 resetBtn.addEventListener('click', () => {
   if (confirm('Tüm katılımcı oylarını sıfırlamak istediğinize emin misiniz?')) {
+    survey.resetEpoch = Date.now();
     survey.questions.forEach(q => q.votes = {});
+    survey.activeQuestionIndex = 0;
     saveSurvey();
+    if (mqttClient && mqttClient.connected) {
+      mqttClient.publish(`bodtum/survey/${roomId}/reset`, JSON.stringify({ resetEpoch: survey.resetEpoch, roomId }), { qos: 1 });
+    }
     broadcastState();
     renderSurvey();
   }

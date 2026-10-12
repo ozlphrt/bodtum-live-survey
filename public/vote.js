@@ -33,11 +33,33 @@ const voterInputArea = document.getElementById('voterInputArea');
 const voterSubmitBtn = document.getElementById('voterSubmitBtn');
 const voterLiveResults = document.getElementById('voterLiveResults');
 
+// Reset client state when survey host resets
+function performClientReset(newEpoch) {
+  if (newEpoch) {
+    localStorage.setItem(`bodtum_reset_epoch_${roomId}`, newEpoch.toString());
+  }
+  localStorage.removeItem(`bodtum_votes_${roomId}`);
+  hasVotedCurrent = false;
+  selectedAnswer = null;
+  currentQuestionId = null;
+  voterSubmitBtn.disabled = true;
+  voterSubmitBtn.textContent = 'Cevabı Gönder';
+}
+
 // Render Question Form
 function renderQuestion(state) {
   currentSurvey = state;
   const activeQ = state.activeQuestion;
   if (!activeQ) return;
+
+  // Handle Host Reset (detect change in resetEpoch)
+  const incomingEpoch = state.resetEpoch ? state.resetEpoch.toString() : null;
+  const storedEpoch = localStorage.getItem(`bodtum_reset_epoch_${roomId}`);
+  if (incomingEpoch && storedEpoch && incomingEpoch !== storedEpoch) {
+    performClientReset(incomingEpoch);
+  } else if (incomingEpoch && !storedEpoch) {
+    localStorage.setItem(`bodtum_reset_epoch_${roomId}`, incomingEpoch);
+  }
 
   // Locked state
   if (!state.acceptingVotes) {
@@ -49,11 +71,12 @@ function renderQuestion(state) {
     lockedView.style.display = 'none';
   }
 
-  // Question changed
+  // Question changed or reset
   if (currentQuestionId !== activeQ.id) {
     currentQuestionId = activeQ.id;
     selectedAnswer = activeQ.type === 'multi' ? [] : null;
     voterSubmitBtn.disabled = true;
+    voterSubmitBtn.textContent = 'Cevabı Gönder';
 
     const storedVotes = JSON.parse(localStorage.getItem(`bodtum_votes_${roomId}`) || '{}');
     if (storedVotes[activeQ.id] !== undefined) {
@@ -299,6 +322,7 @@ let mqttClient = null;
 const TOPIC_VOTE = `bodtum/survey/${roomId}/vote`;
 const TOPIC_JOIN = `bodtum/survey/${roomId}/join`;
 const TOPIC_STATE = `bodtum/survey/${roomId}/state`;
+const TOPIC_RESET = `bodtum/survey/${roomId}/reset`;
 
 function connectRealtime(brokerIndex = 0) {
   if (brokerIndex >= BROKERS.length) return;
@@ -313,6 +337,7 @@ function connectRealtime(brokerIndex = 0) {
   mqttClient.on('connect', () => {
     voterProgressTag.textContent = '🟢 Canlı Bağlandı';
     mqttClient.subscribe(TOPIC_STATE);
+    mqttClient.subscribe(TOPIC_RESET);
     mqttClient.publish(TOPIC_JOIN, JSON.stringify({ voterId }));
   });
 
@@ -321,9 +346,15 @@ function connectRealtime(brokerIndex = 0) {
       if (topic === TOPIC_STATE) {
         const state = JSON.parse(message.toString());
         renderQuestion(state);
+      } else if (topic === TOPIC_RESET) {
+        const resetData = JSON.parse(message.toString());
+        performClientReset(resetData.resetEpoch);
+        if (currentSurvey) {
+          renderQuestion(currentSurvey);
+        }
       }
     } catch (e) {
-      console.error('Error handling state message:', e);
+      console.error('Error handling message:', e);
     }
   });
 

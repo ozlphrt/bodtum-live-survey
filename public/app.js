@@ -443,23 +443,34 @@ function renderSurvey() {
   else if (activeQ.type === 'wordcloud') renderWordCloud(results);
 }
 
+const LETTERS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+
 function renderOptionsBreakdown(results) {
   const breakdown = results.breakdown || [];
   let maxCount = 0;
   breakdown.forEach(b => { if (b.count > maxCount) maxCount = b.count; });
 
-  resultsContainer.innerHTML = breakdown.map(item => `
-    <div class="option-result-row ${item.count > 0 ? 'has-votes' : ''}">
-      <div class="result-bar-fill ${maxCount > 0 && item.count === maxCount ? 'lead-option' : ''}" style="width: ${item.percentage}%;"></div>
-      <div class="result-content">
-        <div class="option-label-text">${escapeHtml(item.text)}</div>
-        <div class="option-stats">
-          <span class="option-count-badge">${item.count} ${item.count === 1 ? 'oy' : 'oy'}</span>
-          <span class="option-percentage">${item.percentage}%</span>
+  resultsContainer.innerHTML = breakdown.map((item, idx) => {
+    const isLead = maxCount > 0 && item.count === maxCount;
+    const letter = LETTERS[idx] || (idx + 1);
+
+    return `
+      <div class="option-result-row ${item.count > 0 ? 'has-votes' : ''}">
+        <div class="result-bar-fill ${isLead ? 'lead-option' : ''}" style="width: ${item.percentage}%;"></div>
+        <div class="result-content">
+          <div class="option-label-group">
+            <div class="option-letter-badge">${letter}</div>
+            <div class="option-label-text">${escapeHtml(item.text)}</div>
+          </div>
+          <div class="option-stats">
+            ${isLead && results.totalVotes > 1 ? '<span class="lead-crown-badge">👑 Lider</span>' : ''}
+            <span class="option-count-badge">${item.count} ${item.count === 1 ? 'oy' : 'oy'}</span>
+            <span class="option-percentage">${item.percentage}%</span>
+          </div>
         </div>
       </div>
-    </div>
-  `).join('');
+    `;
+  }).join('');
 }
 
 function renderRating(results) {
@@ -592,6 +603,43 @@ function broadcastState() {
     mqttClient.publish(TOPIC_STATE, payload, { retain: true, qos: 1 });
   }
 }
+
+// Keyboard Shortcuts for Presenter (Arrow keys, Space, L, F)
+window.addEventListener('keydown', (e) => {
+  if (['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) return;
+  if (questionModal && questionModal.open) return;
+
+  if (e.key === 'ArrowRight' || e.key === ' ') {
+    e.preventDefault();
+    if (survey.activeQuestionIndex < survey.questions.length - 1) {
+      survey.activeQuestionIndex++;
+      saveSurvey();
+      broadcastState();
+      renderSurvey();
+    }
+  } else if (e.key === 'ArrowLeft') {
+    e.preventDefault();
+    if (survey.activeQuestionIndex > 0) {
+      survey.activeQuestionIndex--;
+      saveSurvey();
+      broadcastState();
+      renderSurvey();
+    }
+  } else if (e.key.toLowerCase() === 'l') {
+    e.preventDefault();
+    survey.acceptingVotes = !survey.acceptingVotes;
+    saveSurvey();
+    broadcastState();
+    renderSurvey();
+  } else if (e.key.toLowerCase() === 'f') {
+    e.preventDefault();
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(() => {});
+    } else {
+      document.exitFullscreen().catch(() => {});
+    }
+  }
+});
 
 // Boot
 renderSurvey();

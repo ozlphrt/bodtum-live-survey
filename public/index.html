@@ -3,39 +3,49 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BODTÜM Canlı Yapay Zeka Anketi</title>
+  <title>BODTÜM & ODTÜ | Canlı Yapay Zeka Anketi</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./style.css?v=3">
+  <link rel="stylesheet" href="./style.css?v=4">
 </head>
 <body>
   <!-- Ambient background glow lights -->
   <div class="ambient-glow glow-top-right"></div>
   <div class="ambient-glow glow-bottom-left"></div>
 
-  <!-- Top Header Navigation -->
+  <!-- Top Executive Header -->
   <header>
-    <div class="brand">
-      <img src="./bodtum-logo.png" alt="BODTÜM Logo" style="height: 52px; width: auto; max-width: 140px; object-fit: contain; border-radius: 8px; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.5));">
-      <div>
-        <div class="brand-title">BODTÜM Canlı Yapay Zeka Anketi</div>
-        <div class="brand-subtitle">Bodrum ODTÜ Mezunları Derneği • Anlık Katılımcı Sonuçları</div>
+    <div class="brand-wrapper">
+      <div class="logos-lockup">
+        <!-- Official ODTÜ Emblem -->
+        <img src="./odtu-logo.png" alt="ODTÜ Amblemi" class="odtu-emblem" title="Orta Doğu Teknik Üniversitesi">
+        <div class="logo-divider"></div>
+        <!-- Official BODTÜM Logo -->
+        <img src="./bodtum-logo.png" alt="BODTÜM Logo" class="bodtum-emblem" title="Bodrum ODTÜ Mezunları Derneği">
+      </div>
+
+      <div class="brand-text-block">
+        <div class="brand-main-title">
+          <span>Yapay Zeka Canlı Anketi</span>
+          <span class="live-pill">CANLI</span>
+        </div>
+        <div class="brand-sub-title">Bodrum ODTÜ Mezunları Derneği • Gerçek Zamanlı Katılımcı Oylaması</div>
       </div>
     </div>
 
     <div class="header-status">
-      <div class="badge" id="roomBadge" style="background: rgba(99, 102, 241, 0.15); border-color: rgba(99, 102, 241, 0.35);">
+      <div class="badge" id="roomBadge" style="background: rgba(99, 102, 241, 0.12); border-color: rgba(99, 102, 241, 0.35);">
         🔑 Oda: <strong id="roomCodeText" style="color: #a5b4fc; margin-left: 4px;">...</strong>
       </div>
       <div class="badge" id="participantBadge" title="Bağlı canlı katılımcılar">
         <span class="status-dot"></span>
-        <span id="participantCount">0</span> katılımcı
+        <span id="participantCount">0</span> Katılımcı
       </div>
-      <button class="sound-toggle active" id="soundToggle" title="Oylar geldiğinde ses çal">
+      <button class="sound-toggle active" id="soundToggle" title="Oylar geldiğinde ses efekti çal">
         🔔 Ses Açık
       </button>
-      <button class="btn-secondary" id="fullscreenBtn" style="width: auto; padding: 7px 14px;" title="Tam ekran sunum">
+      <button class="btn-secondary" id="fullscreenBtn" style="width: auto; padding: 8px 16px;" title="Tam ekran sunum [F]">
         ⛶ Tam Ekran
       </button>
     </div>
@@ -43,29 +53,32 @@
 
   <!-- Main Presenter Layout -->
   <main class="presenter-layout">
-    <!-- QR Code & Join Panel -->
+    <!-- QR Code Kiosk Card -->
     <aside class="join-card">
-      <div class="join-step-badge">Hızlı Katılım</div>
+      <div class="join-step-badge">
+        <span class="status-dot"></span>
+        HIZLI KATILIM
+      </div>
       <h3>Katılmak İçin Tara</h3>
-      <p>Telefonunuzun kamerası ile QR kodu okutun. Kayıt veya uygulama gerekmez!</p>
+      <p>Telefon kameranızla QR kodu taratın. Kayıt veya uygulama indirme gerekmez!</p>
 
       <div class="qr-frame">
-        <div id="qrcodeBox" style="width: 210px; height: 210px; display: flex; align-items: center; justify-content: center; background: #ffffff; border-radius: 12px; overflow: hidden; padding: 10px; box-sizing: border-box;">
-          <!-- High-res Vector SVG QR code injected here -->
+        <div id="qrcodeBox" style="width: 210px; height: 210px; display: flex; align-items: center; justify-content: center; background: #ffffff; border-radius: 12px; overflow: hidden; padding: 8px; box-sizing: border-box;">
+          <!-- Crisp Vector SVG QR Code generated client-side -->
         </div>
       </div>
 
       <div class="join-url-box">
-        <span class="join-url-text" id="joinUrlText">Bağlantı oluşturuluyor...</span>
+        <span class="join-url-text" id="joinUrlText">Bağlantı hazırlanıyor...</span>
         <button class="copy-btn" id="copyUrlBtn">Kopyala</button>
       </div>
 
       <div class="quick-tools">
         <button class="btn-secondary" id="openSimulatorBtn">
-          📱 Mobil Önizleme (Simülatör)
+          📱 Mobil Önizleme Simülatörü
         </button>
         <button class="btn-secondary" id="openTabBtn">
-          ↗ Oylama Ekranını Aç
+          ↗ Oylama Ekranını Yeni Sekmede Aç
         </button>
       </div>
     </aside>
@@ -103,20 +116,20 @@
         </div>
       </div>
 
-      <!-- Presenter Action Toolbar -->
+      <!-- Presenter Action Toolbar (Clicker Deck) -->
       <footer class="presenter-toolbar">
         <div class="nav-controls">
           <button class="btn-secondary" id="prevBtn" style="width: auto;">
-            ◀ Önceki Soru
+            ◀ Önceki Soru <span class="key-hint">←</span>
           </button>
           <button class="btn-primary" id="nextBtn">
-            Sonraki Soru ▶
+            Sonraki Soru ▶ <span class="key-hint" style="background: rgba(255,255,255,0.25); border-color: rgba(255,255,255,0.4); color: #fff;">→</span>
           </button>
         </div>
 
         <div class="tool-group">
           <button class="btn-secondary" id="toggleLockBtn" style="width: auto;">
-            🔒 Oylamayı Kilitle
+            🔒 Oylamayı Kilitle <span class="key-hint">L</span>
           </button>
           <button class="btn-secondary" id="addQuestionBtn" style="width: auto;">
             ➕ Yeni Soru Ekle
@@ -139,17 +152,17 @@
   </div>
 
   <!-- Add Question Modal -->
-  <dialog id="questionModal" style="background: #111827; color: #fff; border: 1px solid rgba(255,255,255,0.15); border-radius: 18px; padding: 28px; width: 90%; max-width: 520px; margin: auto; backdrop-filter: blur(25px); box-shadow: 0 25px 50px rgba(0,0,0,0.8);">
-    <h3 style="margin-bottom: 16px; font-size: 1.4rem;">Yeni Soru Ekle</h3>
+  <dialog id="questionModal" style="background: #111827; color: #fff; border: 1px solid rgba(255,255,255,0.15); border-radius: 20px; padding: 28px; width: 90%; max-width: 520px; margin: auto; backdrop-filter: blur(25px); box-shadow: 0 25px 60px rgba(0,0,0,0.85);">
+    <h3 style="margin-bottom: 16px; font-size: 1.4rem; font-weight: 800;">Yeni Soru Ekle</h3>
     <form id="newQuestionForm" method="dialog" style="display: flex; flex-direction: column; gap: 14px;">
       <div>
         <label style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px;">Soru Başlığı</label>
-        <input type="text" id="modalQTitle" required placeholder="Örn: Yapay zekayı en çok nerede faydalı buluyorsunuz?" style="width: 100%; padding: 10px 14px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; color: #fff; font-size: 0.95rem;">
+        <input type="text" id="modalQTitle" required placeholder="Örn: Yapay zekayı en çok nerede faydalı buluyorsunuz?" style="width: 100%; padding: 12px 14px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; color: #fff; font-size: 0.95rem;">
       </div>
 
       <div>
         <label style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px;">Soru Tipi</label>
-        <select id="modalQType" style="width: 100%; padding: 10px 14px; background: #1e293b; border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; color: #fff; font-size: 0.95rem;">
+        <select id="modalQType" style="width: 100%; padding: 12px 14px; background: #1e293b; border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; color: #fff; font-size: 0.95rem;">
           <option value="single">Tek Seçimli Anket</option>
           <option value="multi">Çoklu Seçim (Birden fazla seçilebilir)</option>
           <option value="rating">1 - 5 Yıldız Değerlendirme</option>
@@ -159,7 +172,7 @@
 
       <div id="modalOptionsGroup">
         <label style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px;">Seçenekler (Her satıra bir seçenek)</label>
-        <textarea id="modalQOptions" rows="4" placeholder="Seçenek 1&#10;Seçenek 2&#10;Seçenek 3" style="width: 100%; padding: 10px 14px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; color: #fff; font-size: 0.95rem; resize: vertical;"></textarea>
+        <textarea id="modalQOptions" rows="4" placeholder="Seçenek 1&#10;Seçenek 2&#10;Seçenek 3" style="width: 100%; padding: 12px 14px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; color: #fff; font-size: 0.95rem; resize: vertical;"></textarea>
       </div>
 
       <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
@@ -170,8 +183,8 @@
   </dialog>
 
   <!-- Local Self-Contained Vector QR Code Generator & Real-Time Sync -->
-  <script src="./qrcode.js?v=3"></script>
+  <script src="./qrcode.js?v=4"></script>
   <script src="https://cdn.jsdelivr.net/npm/mqtt@5.3.5/dist/mqtt.min.js"></script>
-  <script src="./app.js?v=3"></script>
+  <script src="./app.js?v=4"></script>
 </body>
 </html>

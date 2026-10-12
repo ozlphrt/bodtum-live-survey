@@ -192,17 +192,38 @@ app.get('/join', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'vote.html'));
 });
 
+// Helper to determine best public join URL (Codespaces, cloud proxy, or LAN Wi-Fi)
+function determineJoinUrl(req) {
+  if (req.query.host) {
+    return `${req.query.host}/vote`;
+  }
+
+  // 1. If running inside GitHub Codespaces
+  if (process.env.CODESPACE_NAME) {
+    const domain = process.env.GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN || 'app.github.dev';
+    return `https://${process.env.CODESPACE_NAME}-${PORT}.${domain}/vote`;
+  }
+
+  // 2. If behind reverse proxy or public domain (Forwarded host header)
+  const host = req.headers['x-forwarded-host'] || req.headers.host;
+  const proto = req.headers['x-forwarded-proto'] || (req.secure ? 'https' : 'http');
+  if (host && !host.includes('localhost') && !host.includes('127.0.0.1')) {
+    return `${proto}://${host}/vote`;
+  }
+
+  // 3. Fallback to LAN Wi-Fi IP for phone access
+  const localIp = getLocalIp();
+  if (localIp !== 'localhost') {
+    return `http://${localIp}:${PORT}/vote`;
+  }
+
+  return `http://localhost:${PORT}/vote`;
+}
+
 // API endpoint to get connection details & QR code
 app.get('/api/info', async (req, res) => {
   const localIp = getLocalIp();
-  const hostHeader = req.headers.host;
-  
-  // Custom URL query if specified
-  const customHost = req.query.host;
-  
-  const bestUrl = customHost 
-    ? `${customHost}/vote`
-    : (localIp !== 'localhost' ? `http://${localIp}:${PORT}/vote` : `http://${hostHeader || 'localhost:' + PORT}/vote`);
+  const bestUrl = determineJoinUrl(req);
 
   try {
     const qrDataUrl = await QRCode.toDataURL(bestUrl, {
@@ -220,6 +241,7 @@ app.get('/api/info', async (req, res) => {
       joinUrl: bestUrl,
       qrDataUrl,
       alternativeUrls: [
+        bestUrl,
         `http://${localIp}:${PORT}/vote`,
         `http://localhost:${PORT}/vote`
       ]

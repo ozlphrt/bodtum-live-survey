@@ -218,7 +218,8 @@ function getSurveyPayload() {
 }
 
 // DOM Elements
-const qrCanvas = document.getElementById('qrCanvas');
+const qrcodeBox = document.getElementById('qrcodeBox');
+const qrImage = document.getElementById('qrImage');
 const joinUrlText = document.getElementById('joinUrlText');
 const copyUrlBtn = document.getElementById('copyUrlBtn');
 const participantCount = document.getElementById('participantCount');
@@ -261,13 +262,29 @@ const voterJoinUrl = getVoterUrl();
 joinUrlText.textContent = voterJoinUrl;
 joinUrlText.title = voterJoinUrl;
 
-// Render QR Code immediately in-browser
-if (window.QRCode && qrCanvas) {
-  QRCode.toCanvas(qrCanvas, voterJoinUrl, {
-    width: 210,
-    margin: 1,
-    color: { dark: '#090d16', light: '#ffffff' }
-  });
+// Fail-safe Instant QR Code Generation
+const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&margin=0&color=09-0d-16&bgcolor=ffffff&data=${encodeURIComponent(voterJoinUrl)}`;
+
+if (qrImage) {
+  qrImage.src = qrApiUrl;
+}
+
+if (window.QRCode && qrcodeBox) {
+  try {
+    qrcodeBox.innerHTML = '';
+    new QRCode(qrcodeBox, {
+      text: voterJoinUrl,
+      width: 210,
+      height: 210,
+      colorDark: '#090d16',
+      colorLight: '#ffffff',
+      correctLevel: QRCode.CorrectLevel.M
+    });
+  } catch (err) {
+    if (qrcodeBox) {
+      qrcodeBox.innerHTML = `<img src="${qrApiUrl}" style="width: 210px; height: 210px; display: block; border-radius: 8px;" alt="QR Code" />`;
+    }
+  }
 }
 
 // Copy button

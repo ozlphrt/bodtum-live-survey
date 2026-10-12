@@ -50,7 +50,9 @@
       <p>Telefonunuzun kamerası ile QR kodu okutun. Kayıt veya uygulama gerekmez!</p>
 
       <div class="qr-frame">
-        <canvas id="qrCanvas" style="display: block; width: 210px; height: 210px; border-radius: 8px;"></canvas>
+        <div id="qrcodeBox" style="width: 210px; height: 210px; display: flex; align-items: center; justify-content: center; background: #fff; border-radius: 8px; overflow: hidden;">
+          <img id="qrImage" src="" alt="Katılmak için QR Kodu Tara" style="width: 210px; height: 210px; display: block; border-radius: 8px;" />
+        </div>
       </div>
 
       <div class="join-url-box">
@@ -168,7 +170,7 @@
   </dialog>
 
   <!-- Client-side Pure QR Code & Real-Time Sync Libraries -->
-  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mqtt@5.3.5/dist/mqtt.min.js"></script>
   <script src="./app.js"></script>
 </body>

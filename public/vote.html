@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./style.css?v=5">
+  <link rel="stylesheet" href="./style.css?v=6">
   <style>
     /* Voter Screen Minimal Layout */
     .voter-container {
@@ -32,7 +32,12 @@
     .voter-brand {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
+      background: #ffffff;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      padding: 5px 12px;
+      border-radius: var(--radius-md);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
     }
 
     .voter-card {
@@ -185,9 +190,9 @@
     <!-- Clean Header -->
     <header class="voter-header" style="background: none; border-bottom: 1px solid var(--border); padding: 0 0 16px 0;">
       <div class="voter-brand">
-        <img src="./odtu-logo.png" alt="ODTÜ" style="height: 28px; width: auto;">
-        <div style="width: 1px; height: 18px; background: var(--border-strong);"></div>
-        <img src="./bodtum-logo.png" alt="BODTÜM" style="height: 28px; width: auto;">
+        <img src="./odtu-logo.png" alt="ODTÜ" style="height: 26px; width: auto; display: block;">
+        <div style="width: 1px; height: 18px; background: #e2e8f0;"></div>
+        <img src="./bodtum-logo.png" alt="BODTÜM" style="height: 26px; width: auto; display: block;">
       </div>
       <div class="pill" id="voterProgressTag" style="padding: 4px 10px; font-size: 0.75rem;">Bağlanıyor...</div>
     </header>

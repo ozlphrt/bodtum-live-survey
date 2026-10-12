@@ -20,12 +20,15 @@
       <div class="brand-badge">BODTUM</div>
       <div>
         <div class="brand-title">Live Audience Poll & Survey</div>
-        <div class="brand-subtitle">Real-time instant results dashboard</div>
+        <div class="brand-subtitle">Real-time instant results • Serverless GitHub Pages</div>
       </div>
     </div>
 
     <div class="header-status">
-      <div class="badge" id="participantBadge" title="Live active connected clients">
+      <div class="badge" id="roomBadge" style="background: rgba(99, 102, 241, 0.15); border-color: rgba(99, 102, 241, 0.35);">
+        🔑 Room: <strong id="roomCodeText" style="color: #a5b4fc; margin-left: 4px;">...</strong>
+      </div>
+      <div class="badge" id="participantBadge" title="Live connected participants">
         <span class="status-dot"></span>
         <span id="participantCount">0</span> participants connected
       </div>
@@ -47,11 +50,11 @@
       <p>Point your mobile camera to answer live. No app or registration required!</p>
 
       <div class="qr-frame">
-        <img id="qrImage" class="qr-image" src="" alt="Scan QR Code to Join">
+        <canvas id="qrCanvas" style="display: block; width: 210px; height: 210px; border-radius: 8px;"></canvas>
       </div>
 
       <div class="join-url-box">
-        <span class="join-url-text" id="joinUrlText">Loading join URL...</span>
+        <span class="join-url-text" id="joinUrlText">Generating join link...</span>
         <button class="copy-btn" id="copyUrlBtn">Copy</button>
       </div>
 
@@ -89,7 +92,6 @@
 
         <!-- Dynamic Results Container -->
         <div class="results-container" id="resultsContainer">
-          <!-- Rendered via JavaScript: Options Bars / Rating / Wordcloud -->
           <div class="empty-state">
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
@@ -164,8 +166,9 @@
     </form>
   </dialog>
 
-  <!-- Socket.io client script (CDN works on GitHub Pages, Render & Local) -->
-  <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
+  <!-- Client-side Pure QR Code & Real-Time Sync Libraries -->
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mqtt@5.3.5/dist/mqtt.min.js"></script>
   <script src="./app.js"></script>
 </body>
 </html>

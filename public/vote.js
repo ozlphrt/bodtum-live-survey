@@ -1,11 +1,19 @@
-// Mobile Participant Voting Client Script
-const serverParam = new URLSearchParams(window.location.search).get('server');
-const socket = io(serverParam || window.location.origin);
+// Mobile Participant Voting Client - 100% Serverless GitHub Pages Real-Time Engine
+
+// Multi-Broker List with Automatic Fallback
+const BROKERS = [
+  'wss://broker.emqx.io:8084/mqtt',
+  'wss://broker.hivemq.com:8884/mqtt'
+];
+
+// Read Room from URL
+const urlParams = new URLSearchParams(window.location.search);
+const roomId = urlParams.get('room') || 'bodtum-default';
 
 // Persistent Voter ID
 let voterId = localStorage.getItem('bodtum_voter_id');
 if (!voterId) {
-  voterId = 'voter_' + Math.random().toString(36).substring(2, 9) + Date.now().toString(36);
+  voterId = 'v_' + Math.random().toString(36).substring(2, 9) + Date.now().toString(36);
   localStorage.setItem('bodtum_voter_id', voterId);
 }
 
@@ -31,7 +39,7 @@ function renderQuestion(state) {
   const activeQ = state.activeQuestion;
   if (!activeQ) return;
 
-  // Check if locked
+  // Locked state
   if (!state.acceptingVotes) {
     activeQuestionView.style.display = 'none';
     votedFeedbackView.style.display = 'none';
@@ -41,14 +49,13 @@ function renderQuestion(state) {
     lockedView.style.display = 'none';
   }
 
-  // Check if question changed
+  // Question changed
   if (currentQuestionId !== activeQ.id) {
     currentQuestionId = activeQ.id;
     selectedAnswer = null;
     voterSubmitBtn.disabled = true;
 
-    // Check if voter already submitted for this question
-    const storedVotes = JSON.parse(localStorage.getItem('bodtum_submitted_votes') || '{}');
+    const storedVotes = JSON.parse(localStorage.getItem(`bodtum_votes_${roomId}`) || '{}');
     if (storedVotes[activeQ.id] !== undefined) {
       hasVotedCurrent = true;
       selectedAnswer = storedVotes[activeQ.id];
@@ -64,18 +71,13 @@ function renderQuestion(state) {
     return;
   }
 
-  // Show active question form
   activeQuestionView.style.display = 'block';
   votedFeedbackView.style.display = 'none';
   voterQTitle.textContent = activeQ.title;
 
-  if (activeQ.type === 'single') {
-    renderSingleOptions(activeQ.options);
-  } else if (activeQ.type === 'rating') {
-    renderRatingOptions(activeQ);
-  } else if (activeQ.type === 'wordcloud') {
-    renderTextInput(activeQ);
-  }
+  if (activeQ.type === 'single') renderSingleOptions(activeQ.options);
+  else if (activeQ.type === 'rating') renderRatingOptions(activeQ);
+  else if (activeQ.type === 'wordcloud') renderTextInput(activeQ);
 }
 
 // Single Choice Options
@@ -86,17 +88,13 @@ function renderSingleOptions(options) {
     html += `
       <button type="button" class="option-btn ${isSelected ? 'selected' : ''}" data-id="${opt.id}">
         <span>${escapeHtml(opt.text)}</span>
-        <div class="option-check">
-          ${isSelected ? '✓' : ''}
-        </div>
+        <div class="option-check">${isSelected ? '✓' : ''}</div>
       </button>
     `;
   });
   html += '</div>';
-
   voterInputArea.innerHTML = html;
 
-  // Click listeners
   const buttons = voterInputArea.querySelectorAll('.option-btn');
   buttons.forEach(btn => {
     btn.addEventListener('click', () => {
@@ -115,23 +113,16 @@ function renderSingleOptions(options) {
 // Rating Options
 function renderRatingOptions(q) {
   const labels = q.labels || ["Poor", "Fair", "Good", "Very Good", "Exceptional 🌟"];
-  let html = `
-    <div class="rating-row-interactive">
-  `;
+  let html = '<div class="rating-row-interactive">';
   for (let i = 1; i <= 5; i++) {
-    const isActive = selectedAnswer === i;
     html += `
-      <button type="button" class="star-btn ${isActive ? 'active' : ''}" data-val="${i}">
+      <button type="button" class="star-btn ${selectedAnswer === i ? 'active' : ''}" data-val="${i}">
         <span class="star-icon">★</span>
         <span class="star-num">${i}</span>
       </button>
     `;
   }
-  html += `
-    </div>
-    <div class="rating-label-hint" id="ratingHint">Tap a star to rate</div>
-  `;
-
+  html += '</div><div class="rating-label-hint" id="ratingHint">Tap a star to rate</div>';
   voterInputArea.innerHTML = html;
 
   const starButtons = voterInputArea.querySelectorAll('.star-btn');
@@ -143,11 +134,8 @@ function renderRatingOptions(q) {
       selectedAnswer = val;
       starButtons.forEach(b => {
         const bVal = parseInt(b.getAttribute('data-val'), 10);
-        if (bVal <= val) {
-          b.classList.add('active');
-        } else {
-          b.classList.remove('active');
-        }
+        if (bVal <= val) b.classList.add('active');
+        else b.classList.remove('active');
       });
       ratingHint.textContent = `${val} Star${val > 1 ? 's' : ''} - ${labels[val - 1]}`;
       voterSubmitBtn.disabled = false;
@@ -177,31 +165,26 @@ function renderTextInput(q) {
   });
 
   input.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' && !voterSubmitBtn.disabled) {
-      submitVote();
-    }
+    if (e.key === 'Enter' && !voterSubmitBtn.disabled) submitVote();
   });
 
-  setTimeout(() => input.focus(), 100);
+  setTimeout(() => input.focus(), 150);
 }
 
-// Submit Vote Handler
+// Submit Vote
 function submitVote() {
   if (!selectedAnswer || !currentQuestionId) return;
 
   voterSubmitBtn.disabled = true;
   voterSubmitBtn.textContent = 'Submitting...';
 
-  // Save in local storage so refreshes don't lose status
-  const storedVotes = JSON.parse(localStorage.getItem('bodtum_submitted_votes') || '{}');
+  // Save vote locally
+  const storedVotes = JSON.parse(localStorage.getItem(`bodtum_votes_${roomId}`) || '{}');
   storedVotes[currentQuestionId] = selectedAnswer;
-  localStorage.setItem('bodtum_submitted_votes', JSON.stringify(storedVotes));
+  localStorage.setItem(`bodtum_votes_${roomId}`, JSON.stringify(storedVotes));
 
-  socket.emit('submit_vote', {
-    questionId: currentQuestionId,
-    answer: selectedAnswer,
-    voterId: voterId
-  });
+  // Publish to real-time relay
+  publishVote(currentQuestionId, selectedAnswer);
 
   hasVotedCurrent = true;
   voterSubmitBtn.textContent = 'Submit Response 🚀';
@@ -213,11 +196,10 @@ function submitVote() {
 
 voterSubmitBtn.addEventListener('click', submitVote);
 
-// Show Voted / Live Results Screen on Mobile
+// Show Voted / Results Screen
 function showVotedScreen(q) {
   activeQuestionView.style.display = 'none';
   votedFeedbackView.style.display = 'block';
-
   renderMobileResults(q);
 }
 
@@ -226,23 +208,17 @@ function renderMobileResults(q) {
 
   if (q.type === 'single') {
     const breakdown = results.breakdown || [];
-    let html = '<div style="display: flex; flex-direction: column; gap: 10px;">';
-    breakdown.forEach(item => {
-      const isMyChoice = selectedAnswer === item.id;
-      html += `
-        <div style="background: rgba(15,23,42,0.6); padding: 12px 14px; border-radius: 10px; border: 1px solid ${isMyChoice ? 'var(--secondary)' : 'var(--card-border)'};">
-          <div style="display: flex; justify-content: space-between; font-size: 0.95rem; font-weight: 600; margin-bottom: 6px;">
-            <span>${escapeHtml(item.text)} ${isMyChoice ? '⭐ (Your pick)' : ''}</span>
-            <span style="color: var(--secondary);">${item.percentage}%</span>
-          </div>
-          <div style="height: 6px; background: rgba(255,255,255,0.1); border-radius: 999px; overflow: hidden;">
-            <div style="width: ${item.percentage}%; height: 100%; background: linear-gradient(90deg, var(--primary), var(--secondary)); border-radius: 999px;"></div>
-          </div>
+    voterLiveResults.innerHTML = breakdown.map(item => `
+      <div style="background: rgba(15,23,42,0.6); padding: 12px 14px; border-radius: 10px; margin-bottom: 8px; border: 1px solid ${selectedAnswer === item.id ? 'var(--secondary)' : 'var(--card-border)'};">
+        <div style="display: flex; justify-content: space-between; font-size: 0.92rem; font-weight: 600; margin-bottom: 6px;">
+          <span>${escapeHtml(item.text)} ${selectedAnswer === item.id ? '⭐ (Your pick)' : ''}</span>
+          <span style="color: var(--secondary);">${item.percentage}%</span>
         </div>
-      `;
-    });
-    html += '</div>';
-    voterLiveResults.innerHTML = html;
+        <div style="height: 6px; background: rgba(255,255,255,0.1); border-radius: 999px; overflow: hidden;">
+          <div style="width: ${item.percentage}%; height: 100%; background: linear-gradient(90deg, var(--primary), var(--secondary)); border-radius: 999px;"></div>
+        </div>
+      </div>
+    `).join('');
   } else if (q.type === 'rating') {
     const avg = results.average || "0.0";
     voterLiveResults.innerHTML = `
@@ -254,49 +230,67 @@ function renderMobileResults(q) {
     `;
   } else if (q.type === 'wordcloud') {
     const words = results.words || [];
-    let html = '<div style="display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; padding: 10px 0;">';
-    words.forEach(w => {
-      html += `<span class="word-pill scale-1">${escapeHtml(w.word)} <span class="word-freq">${w.count}</span></span>`;
-    });
-    html += '</div>';
-    voterLiveResults.innerHTML = html || '<div style="text-align: center; color: var(--text-dim); padding: 12px;">Responses are streaming in live on the main screen!</div>';
+    voterLiveResults.innerHTML = words.length > 0
+      ? `<div style="display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; padding: 10px 0;">
+          ${words.map(w => `<span class="word-pill scale-1">${escapeHtml(w.word)} <span class="word-freq">${w.count}</span></span>`).join('')}
+         </div>`
+      : '<div style="text-align: center; color: var(--text-dim); padding: 12px;">Responses are streaming in live on the main screen!</div>';
   }
 }
 
-// Utility
 function escapeHtml(str) {
   if (!str) return '';
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
+  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-// Socket Events
-socket.on('connect', () => {
-  socket.emit('set_role', 'voter');
-});
+// ----------------------------------------------------
+// Real-time Cloud Broker Pub/Sub Connection (Serverless)
+// ----------------------------------------------------
+let mqttClient = null;
+const TOPIC_VOTE = `bodtum/survey/${roomId}/vote`;
+const TOPIC_JOIN = `bodtum/survey/${roomId}/join`;
+const TOPIC_STATE = `bodtum/survey/${roomId}/state`;
 
-socket.on('survey_state', (state) => {
-  renderQuestion(state);
-});
+function connectRealtime(brokerIndex = 0) {
+  if (brokerIndex >= BROKERS.length) return;
+  const url = BROKERS[brokerIndex];
 
-socket.on('survey_updated', (state) => {
-  renderQuestion(state);
-  if (hasVotedCurrent && state.activeQuestion) {
-    renderMobileResults(state.activeQuestion);
+  mqttClient = mqtt.connect(url, {
+    clientId: 'voter_' + Math.random().toString(36).substring(2, 9),
+    keepalive: 30,
+    reconnectPeriod: 2000
+  });
+
+  mqttClient.on('connect', () => {
+    voterProgressTag.textContent = '🟢 Connected Live';
+    mqttClient.subscribe(TOPIC_STATE);
+    // Announce join
+    mqttClient.publish(TOPIC_JOIN, JSON.stringify({ voterId }));
+  });
+
+  mqttClient.on('message', (topic, message) => {
+    try {
+      if (topic === TOPIC_STATE) {
+        const state = JSON.parse(message.toString());
+        renderQuestion(state);
+      }
+    } catch (e) {
+      console.error('Error handling state message:', e);
+    }
+  });
+
+  mqttClient.on('error', () => {
+    mqttClient.end(true);
+    connectRealtime(brokerIndex + 1);
+  });
+}
+
+function publishVote(questionId, answer) {
+  if (mqttClient && mqttClient.connected) {
+    const payload = JSON.stringify({ questionId, answer, voterId });
+    mqttClient.publish(TOPIC_VOTE, payload, { qos: 1 });
   }
-});
+}
 
-socket.on('question_changed', (state) => {
-  renderQuestion(state);
-});
-
-socket.on('voting_toggled', (data) => {
-  if (currentSurvey) {
-    currentSurvey.acceptingVotes = data.acceptingVotes;
-    renderQuestion(currentSurvey);
-  }
-});
+// Boot
+connectRealtime();

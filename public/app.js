@@ -1,6 +1,26 @@
-// Presenter Dashboard Client Script
-const serverParam = new URLSearchParams(window.location.search).get('server');
-const socket = io(serverParam || window.location.origin);
+// Presenter Dashboard - 100% Serverless GitHub Pages Real-Time Engine
+
+// Multi-Broker List with Automatic Fallback
+const BROKERS = [
+  'wss://broker.emqx.io:8084/mqtt',
+  'wss://broker.hivemq.com:8884/mqtt'
+];
+
+// Room Identification
+function getOrCreateRoomId() {
+  const params = new URLSearchParams(window.location.search);
+  let room = params.get('room');
+  if (!room) {
+    room = 'bodtum-' + Math.floor(1000 + Math.random() * 9000);
+    const newUrl = new URL(window.location.href);
+    newUrl.searchParams.set('room', room);
+    window.history.replaceState({}, '', newUrl);
+  }
+  return room;
+}
+
+const roomId = getOrCreateRoomId();
+document.getElementById('roomCodeText').textContent = roomId;
 
 // Audio Chime Synthesizer using Web Audio API
 class AudioNotifier {
@@ -12,9 +32,7 @@ class AudioNotifier {
   init() {
     if (!this.ctx) {
       const AudioContext = window.AudioContext || window.webkitAudioContext;
-      if (AudioContext) {
-        this.ctx = new AudioContext();
-      }
+      if (AudioContext) this.ctx = new AudioContext();
     }
   }
 
@@ -23,15 +41,12 @@ class AudioNotifier {
     try {
       this.init();
       if (!this.ctx) return;
-      if (this.ctx.state === 'suspended') {
-        this.ctx.resume();
-      }
+      if (this.ctx.state === 'suspended') this.ctx.resume();
 
       const osc = this.ctx.createOscillator();
       const gain = this.ctx.createGain();
 
       osc.type = 'sine';
-      // Pleasant bright marimba chime: 659.25Hz (E5) gliding to 880Hz (A5)
       osc.frequency.setValueAtTime(659.25, this.ctx.currentTime);
       osc.frequency.exponentialRampToValueAtTime(880.00, this.ctx.currentTime + 0.1);
 
@@ -43,19 +58,148 @@ class AudioNotifier {
 
       osc.start();
       osc.stop(this.ctx.currentTime + 0.35);
-    } catch (e) {
-      // Audio autoplay policy fallback
-    }
+    } catch (e) {}
   }
 }
 
 const notifier = new AudioNotifier();
 
-// State
-let currentSurvey = null;
+// Default Survey Structure
+const DEFAULT_SURVEY = {
+  title: "BODTUM Live Usage & Experience Survey",
+  activeQuestionIndex: 0,
+  acceptingVotes: true,
+  questions: [
+    {
+      id: "q1",
+      type: "single",
+      title: "How often do you engage with BODTUM platforms & services?",
+      options: [
+        { id: "opt1", text: "🚀 Daily - It's part of my routine" },
+        { id: "opt2", text: "📅 Weekly - Several times a week" },
+        { id: "opt3", text: "☕ Monthly - When specific needs arise" },
+        { id: "opt4", text: "✨ First time / Just exploring today" }
+      ],
+      votes: {}
+    },
+    {
+      id: "q2",
+      type: "single",
+      title: "Which core service or capability do you find most valuable?",
+      options: [
+        { id: "opt1", text: "🤝 Community Network & Peer Collaboration" },
+        { id: "opt2", text: "💡 Knowledge Base, Guides & Docs" },
+        { id: "opt3", text: "⚡ Rapid Response Tools & Automations" },
+        { id: "opt4", text: "🎓 Workshops, Events & Mentorship" }
+      ],
+      votes: {}
+    },
+    {
+      id: "q3",
+      type: "rating",
+      title: "How would you rate your overall experience so far?",
+      labels: ["Poor", "Fair", "Good", "Very Good", "Exceptional 🌟"],
+      votes: {}
+    },
+    {
+      id: "q4",
+      type: "wordcloud",
+      title: "In 1 to 3 words, what feature or improvement would you like next?",
+      placeholder: "e.g. mobile app, faster sync, dark theme...",
+      votes: {}
+    }
+  ]
+};
+
+// Load or Initialize State
+let survey = JSON.parse(localStorage.getItem(`survey_state_${roomId}`)) || DEFAULT_SURVEY;
+let activeParticipants = new Set();
+
+function saveSurvey() {
+  localStorage.setItem(`survey_state_${roomId}`, JSON.stringify(survey));
+}
+
+// Calculate Aggregated Results
+function calculateResults(q) {
+  if (!q) return { totalVotes: 0 };
+  const totalVotes = Object.keys(q.votes || {}).length;
+
+  if (q.type === 'single') {
+    const counts = {};
+    q.options.forEach(opt => counts[opt.id] = 0);
+    Object.values(q.votes).forEach(optId => {
+      if (counts[optId] !== undefined) counts[optId]++;
+    });
+
+    const breakdown = q.options.map(opt => ({
+      id: opt.id,
+      text: opt.text,
+      count: counts[opt.id] || 0,
+      percentage: totalVotes > 0 ? Math.round(((counts[opt.id] || 0) / totalVotes) * 100) : 0
+    }));
+    return { totalVotes, breakdown };
+  }
+
+  if (q.type === 'rating') {
+    const counts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+    let sum = 0;
+    Object.values(q.votes).forEach(val => {
+      const num = parseInt(val, 10);
+      if (counts[num] !== undefined) {
+        counts[num]++;
+        sum += num;
+      }
+    });
+    const average = totalVotes > 0 ? (sum / totalVotes).toFixed(1) : "0.0";
+    const breakdown = [1, 2, 3, 4, 5].map(star => ({
+      rating: star,
+      label: q.labels[star - 1],
+      count: counts[star],
+      percentage: totalVotes > 0 ? Math.round((counts[star] / totalVotes) * 100) : 0
+    }));
+    return { totalVotes, average, breakdown };
+  }
+
+  if (q.type === 'wordcloud') {
+    const wordCounts = {};
+    const recentEntries = [];
+    Object.entries(q.votes).forEach(([voterId, text]) => {
+      if (!text || typeof text !== 'string') return;
+      const clean = text.trim();
+      if (!clean) return;
+      recentEntries.unshift({ voterId: voterId.slice(0, 6), text: clean });
+      const lower = clean.toLowerCase();
+      wordCounts[lower] = (wordCounts[lower] || 0) + 1;
+    });
+
+    const words = Object.entries(wordCounts)
+      .map(([word, count]) => ({ word, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 30);
+    return { totalVotes, words, recentEntries: recentEntries.slice(0, 15) };
+  }
+
+  return { totalVotes };
+}
+
+function getSurveyPayload() {
+  const activeQ = survey.questions[survey.activeQuestionIndex];
+  return {
+    title: survey.title,
+    activeQuestionIndex: survey.activeQuestionIndex,
+    totalQuestions: survey.questions.length,
+    acceptingVotes: survey.acceptingVotes,
+    activeQuestion: activeQ ? {
+      ...activeQ,
+      votesCount: Object.keys(activeQ.votes || {}).length,
+      results: calculateResults(activeQ)
+    } : null,
+    participantCount: activeParticipants.size
+  };
+}
 
 // DOM Elements
-const qrImage = document.getElementById('qrImage');
+const qrCanvas = document.getElementById('qrCanvas');
 const joinUrlText = document.getElementById('joinUrlText');
 const copyUrlBtn = document.getElementById('copyUrlBtn');
 const participantCount = document.getElementById('participantCount');
@@ -80,36 +224,37 @@ const simulatorDrawer = document.getElementById('simulatorDrawer');
 const closeSimulatorBtn = document.getElementById('closeSimulatorBtn');
 const simulatorFrame = document.getElementById('simulatorFrame');
 
-// Modal Elements
-const questionModal = document.getElementById('questionModal');
-const newQuestionForm = document.getElementById('newQuestionForm');
-const modalCancelBtn = document.getElementById('modalCancelBtn');
-const modalQType = document.getElementById('modalQType');
-const modalOptionsGroup = document.getElementById('modalOptionsGroup');
-
-// Initialize Connection Info & QR Code
-async function loadConnectionInfo() {
-  try {
-    const res = await fetch('/api/info');
-    const data = await res.json();
-    if (data.qrDataUrl) {
-      qrImage.src = data.qrDataUrl;
-    }
-    if (data.joinUrl) {
-      joinUrlText.textContent = data.joinUrl;
-      joinUrlText.title = data.joinUrl;
-    }
-  } catch (err) {
-    console.error('Failed to load connection info:', err);
-    joinUrlText.textContent = `${window.location.origin}/vote`;
-    qrImage.src = `/api/qr?url=${encodeURIComponent(window.location.origin + '/vote')}`;
+// Compute Voter URL
+function getVoterUrl() {
+  const url = new URL(window.location.href);
+  // Replace index.html or root with vote.html
+  let path = url.pathname;
+  if (path.endsWith('/') || path.endsWith('/index.html')) {
+    path = path.replace(/index\.html$/, '').replace(/\/$/, '') + '/vote.html';
+  } else if (!path.endsWith('vote.html')) {
+    path = path + '/vote.html';
   }
+  url.pathname = path;
+  url.searchParams.set('room', roomId);
+  return url.toString();
 }
 
-// Copy URL handler
+const voterJoinUrl = getVoterUrl();
+joinUrlText.textContent = voterJoinUrl;
+joinUrlText.title = voterJoinUrl;
+
+// Render QR Code immediately in-browser
+if (window.QRCode && qrCanvas) {
+  QRCode.toCanvas(qrCanvas, voterJoinUrl, {
+    width: 210,
+    margin: 1,
+    color: { dark: '#090d16', light: '#ffffff' }
+  });
+}
+
+// Copy button
 copyUrlBtn.addEventListener('click', () => {
-  const url = joinUrlText.textContent;
-  navigator.clipboard.writeText(url).then(() => {
+  navigator.clipboard.writeText(voterJoinUrl).then(() => {
     const original = copyUrlBtn.textContent;
     copyUrlBtn.textContent = 'Copied!';
     setTimeout(() => copyUrlBtn.textContent = original, 2000);
@@ -138,103 +283,106 @@ fullscreenBtn.addEventListener('click', () => {
   }
 });
 
-// Open Simulator Drawer
+// Mobile Simulator Drawer
 openSimulatorBtn.addEventListener('click', () => {
   simulatorDrawer.classList.toggle('hidden');
   if (!simulatorDrawer.classList.contains('hidden')) {
-    simulatorFrame.src = './vote.html?sim=' + Date.now();
+    simulatorFrame.src = `./vote.html?room=${roomId}&sim=1`;
   }
 });
+closeSimulatorBtn.addEventListener('click', () => simulatorDrawer.classList.add('hidden'));
+openTabBtn.addEventListener('click', () => window.open(voterJoinUrl, '_blank'));
 
-closeSimulatorBtn.addEventListener('click', () => {
-  simulatorDrawer.classList.add('hidden');
-});
+// Add Question Dialog
+const questionModal = document.getElementById('questionModal');
+const newQuestionForm = document.getElementById('newQuestionForm');
+const modalCancelBtn = document.getElementById('modalCancelBtn');
+const modalQType = document.getElementById('modalQType');
+const modalOptionsGroup = document.getElementById('modalOptionsGroup');
 
-openTabBtn.addEventListener('click', () => {
-  window.open('./vote.html', '_blank');
-});
-
-// Add Question Modal Type Toggle
 modalQType.addEventListener('change', () => {
-  if (modalQType.value === 'single') {
-    modalOptionsGroup.style.display = 'block';
-  } else {
-    modalOptionsGroup.style.display = 'none';
-  }
+  modalOptionsGroup.style.display = modalQType.value === 'single' ? 'block' : 'none';
 });
 
-addQuestionBtn.addEventListener('click', () => {
-  questionModal.showModal();
-});
-
-modalCancelBtn.addEventListener('click', () => {
-  questionModal.close();
-});
+addQuestionBtn.addEventListener('click', () => questionModal.showModal());
+modalCancelBtn.addEventListener('click', () => questionModal.close());
 
 newQuestionForm.addEventListener('submit', (e) => {
   e.preventDefault();
   const title = document.getElementById('modalQTitle').value.trim();
   const type = modalQType.value;
-  const optionsText = document.getElementById('modalQOptions').value;
-  const options = optionsText
-    .split('\n')
-    .map(s => s.trim())
-    .filter(Boolean);
+  const options = document.getElementById('modalQOptions').value.split('\n').map(s => s.trim()).filter(Boolean);
 
   if (!title) return;
 
-  socket.emit('add_question', {
-    title,
+  const newQ = {
+    id: 'q_' + Date.now(),
     type,
-    options: type === 'single' ? (options.length ? options : ['Option 1', 'Option 2']) : []
-  });
+    title,
+    options: type === 'single' ? options.map((opt, i) => ({ id: `opt_${Date.now()}_${i}`, text: opt })) : [],
+    labels: ["Poor", "Fair", "Good", "Very Good", "Exceptional 🌟"],
+    placeholder: "Type your response...",
+    votes: {}
+  };
 
+  survey.questions.push(newQ);
+  saveSurvey();
+  broadcastState();
+  renderSurvey();
   newQuestionForm.reset();
   questionModal.close();
 });
 
 // Reset Survey
 resetBtn.addEventListener('click', () => {
-  if (confirm('Are you sure you want to clear all responses for all questions?')) {
-    fetch('/api/survey/reset', { method: 'POST' });
+  if (confirm('Are you sure you want to reset all responses for all questions?')) {
+    survey.questions.forEach(q => q.votes = {});
+    saveSurvey();
+    broadcastState();
+    renderSurvey();
   }
 });
 
-// Lock Voting
+// Lock Toggle
 toggleLockBtn.addEventListener('click', () => {
-  if (!currentSurvey) return;
-  socket.emit('toggle_voting', !currentSurvey.acceptingVotes);
+  survey.acceptingVotes = !survey.acceptingVotes;
+  saveSurvey();
+  broadcastState();
+  renderSurvey();
 });
 
 // Navigation
 prevBtn.addEventListener('click', () => {
-  if (!currentSurvey) return;
-  if (currentSurvey.activeQuestionIndex > 0) {
-    socket.emit('change_question', currentSurvey.activeQuestionIndex - 1);
+  if (survey.activeQuestionIndex > 0) {
+    survey.activeQuestionIndex--;
+    saveSurvey();
+    broadcastState();
+    renderSurvey();
   }
 });
 
 nextBtn.addEventListener('click', () => {
-  if (!currentSurvey) return;
-  if (currentSurvey.activeQuestionIndex < currentSurvey.totalQuestions - 1) {
-    socket.emit('change_question', currentSurvey.activeQuestionIndex + 1);
+  if (survey.activeQuestionIndex < survey.questions.length - 1) {
+    survey.activeQuestionIndex++;
+    saveSurvey();
+    broadcastState();
+    renderSurvey();
   }
 });
 
-// Render Dynamic Question & Results
-function renderSurvey(state) {
-  currentSurvey = state;
-  const activeQ = state.activeQuestion;
+// Render UI
+function renderSurvey() {
+  const activeQ = survey.questions[survey.activeQuestionIndex];
   if (!activeQ) return;
 
-  // Header tags
-  qIndexTag.textContent = `Question ${state.activeQuestionIndex + 1} of ${state.totalQuestions}`;
+  qIndexTag.textContent = `Question ${survey.activeQuestionIndex + 1} of ${survey.questions.length}`;
   qTypeTag.textContent = activeQ.type === 'single' ? 'Multiple Choice' : (activeQ.type === 'rating' ? 'Star Rating' : 'Live Word Stream');
   qTitle.textContent = activeQ.title;
-  qVoteTotal.textContent = activeQ.votesCount || 0;
 
-  // Lock status
-  if (!state.acceptingVotes) {
+  const totalVotes = Object.keys(activeQ.votes || {}).length;
+  qVoteTotal.textContent = totalVotes;
+
+  if (!survey.acceptingVotes) {
     lockStatusBadge.style.display = 'inline-flex';
     toggleLockBtn.textContent = '🔓 Unlock Voting';
   } else {
@@ -242,188 +390,167 @@ function renderSurvey(state) {
     toggleLockBtn.textContent = '🔒 Lock Voting';
   }
 
-  // Navigation button states
-  prevBtn.disabled = state.activeQuestionIndex === 0;
-  prevBtn.style.opacity = state.activeQuestionIndex === 0 ? '0.4' : '1';
-  
-  if (state.activeQuestionIndex === state.totalQuestions - 1) {
-    nextBtn.textContent = 'Completed (Add More)';
-  } else {
-    nextBtn.textContent = 'Next Question ▶';
-  }
+  prevBtn.disabled = survey.activeQuestionIndex === 0;
+  prevBtn.style.opacity = survey.activeQuestionIndex === 0 ? '0.4' : '1';
+  nextBtn.textContent = survey.activeQuestionIndex === survey.questions.length - 1 ? 'Survey Completed' : 'Next Question ▶';
 
-  // Render question visualization based on type
-  const results = activeQ.results || {};
-
-  if (activeQ.type === 'single') {
-    renderSingleChoiceResults(results);
-  } else if (activeQ.type === 'rating') {
-    renderRatingResults(results);
-  } else if (activeQ.type === 'wordcloud') {
-    renderWordCloudResults(results);
-  }
+  const results = calculateResults(activeQ);
+  if (activeQ.type === 'single') renderSingle(results);
+  else if (activeQ.type === 'rating') renderRating(results);
+  else if (activeQ.type === 'wordcloud') renderWordCloud(results);
 }
 
-// Single Choice Chart
-function renderSingleChoiceResults(results) {
+function renderSingle(results) {
   const breakdown = results.breakdown || [];
-  if (breakdown.length === 0) {
-    resultsContainer.innerHTML = `
-      <div class="empty-state">
-        <p>No options available.</p>
-      </div>`;
-    return;
-  }
-
-  // Find max votes to mark leader
   let maxCount = 0;
-  breakdown.forEach(b => {
-    if (b.count > maxCount) maxCount = b.count;
-  });
+  breakdown.forEach(b => { if (b.count > maxCount) maxCount = b.count; });
 
-  const html = breakdown.map(item => {
-    const isLead = maxCount > 0 && item.count === maxCount;
-    return `
-      <div class="option-result-row ${item.count > 0 ? 'has-votes' : ''}">
-        <div class="result-bar-fill ${isLead ? 'lead-option' : ''}" style="width: ${item.percentage}%;"></div>
-        <div class="result-content">
-          <div class="option-label-text">${escapeHtml(item.text)}</div>
-          <div class="option-stats">
-            <span class="option-count-badge">${item.count} ${item.count === 1 ? 'vote' : 'votes'}</span>
-            <span class="option-percentage">${item.percentage}%</span>
-          </div>
+  resultsContainer.innerHTML = breakdown.map(item => `
+    <div class="option-result-row ${item.count > 0 ? 'has-votes' : ''}">
+      <div class="result-bar-fill ${maxCount > 0 && item.count === maxCount ? 'lead-option' : ''}" style="width: ${item.percentage}%;"></div>
+      <div class="result-content">
+        <div class="option-label-text">${escapeHtml(item.text)}</div>
+        <div class="option-stats">
+          <span class="option-count-badge">${item.count} ${item.count === 1 ? 'vote' : 'votes'}</span>
+          <span class="option-percentage">${item.percentage}%</span>
         </div>
       </div>
-    `;
-  }).join('');
-
-  resultsContainer.innerHTML = html;
-}
-
-// Rating Chart
-function renderRatingResults(results) {
-  const avg = results.average || "0.0";
-  const total = results.totalVotes || 0;
-  const breakdown = results.breakdown || [];
-
-  const starCount = Math.round(parseFloat(avg));
-  const starIcons = [1, 2, 3, 4, 5].map(i => i <= starCount ? '★' : '☆').join('');
-
-  const barsHtml = breakdown.slice().reverse().map(item => `
-    <div class="rating-bar-item">
-      <div class="rating-bar-label">${item.rating} Stars (${item.label})</div>
-      <div class="rating-track">
-        <div class="rating-fill" style="width: ${item.percentage}%;"></div>
-      </div>
-      <span style="font-size: 0.85rem; font-weight: 700; min-width: 40px; text-align: right;">${item.percentage}%</span>
-      <span style="font-size: 0.78rem; color: var(--text-dim); min-width: 35px;">(${item.count})</span>
     </div>
   `).join('');
+}
+
+function renderRating(results) {
+  const avg = results.average || "0.0";
+  const breakdown = results.breakdown || [];
+  const starCount = Math.round(parseFloat(avg));
+  const stars = [1, 2, 3, 4, 5].map(i => i <= starCount ? '★' : '☆').join('');
 
   resultsContainer.innerHTML = `
     <div class="rating-summary-card">
       <div class="rating-score-box">
         <div class="rating-big-number">${avg}</div>
-        <div class="rating-stars-row">${starIcons}</div>
-        <div style="font-size: 0.85rem; color: var(--text-muted);">${total} total ratings</div>
+        <div class="rating-stars-row">${stars}</div>
+        <div style="font-size: 0.85rem; color: var(--text-muted);">${results.totalVotes} total ratings</div>
       </div>
       <div class="rating-bars-list">
-        ${barsHtml}
+        ${breakdown.slice().reverse().map(item => `
+          <div class="rating-bar-item">
+            <div class="rating-bar-label">${item.rating} Stars (${item.label})</div>
+            <div class="rating-track"><div class="rating-fill" style="width: ${item.percentage}%;"></div></div>
+            <span style="font-size: 0.85rem; font-weight: 700; min-width: 40px; text-align: right;">${item.percentage}%</span>
+            <span style="font-size: 0.78rem; color: var(--text-dim); min-width: 35px;">(${item.count})</span>
+          </div>
+        `).join('')}
       </div>
     </div>
   `;
 }
 
-// Word Cloud & Recent Comments
-function renderWordCloudResults(results) {
+function renderWordCloud(results) {
   const words = results.words || [];
   const entries = results.recentEntries || [];
 
   if (words.length === 0 && entries.length === 0) {
-    resultsContainer.innerHTML = `
-      <div class="empty-state">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
-        </svg>
-        <p>Waiting for participants to submit their ideas and feedback...</p>
-      </div>`;
+    resultsContainer.innerHTML = `<div class="empty-state"><p>Waiting for participants to submit ideas and feedback...</p></div>`;
     return;
   }
 
-  // Word tags
   const maxCount = words[0] ? words[0].count : 1;
   const wordsHtml = words.map(w => {
-    let scaleClass = 'scale-1';
-    const ratio = w.count / maxCount;
-    if (ratio >= 0.75) scaleClass = 'scale-4';
-    else if (ratio >= 0.5) scaleClass = 'scale-3';
-    else if (ratio >= 0.25) scaleClass = 'scale-2';
-
-    return `
-      <span class="word-pill ${scaleClass}">
-        ${escapeHtml(w.word)}
-        <span class="word-freq">${w.count}</span>
-      </span>
-    `;
+    let scale = 'scale-1';
+    const r = w.count / maxCount;
+    if (r >= 0.75) scale = 'scale-4';
+    else if (r >= 0.5) scale = 'scale-3';
+    else if (r >= 0.25) scale = 'scale-2';
+    return `<span class="word-pill ${scale}">${escapeHtml(w.word)} <span class="word-freq">${w.count}</span></span>`;
   }).join('');
-
-  // Recent cards
-  const streamHtml = entries.map(e => `
-    <div class="text-entry-card">
-      “${escapeHtml(e.text)}”
-    </div>
-  `).join('');
 
   resultsContainer.innerHTML = `
     <div class="wordcloud-container">
-      <div class="words-cloud-pills">
-        ${wordsHtml || '<span style="color: var(--text-dim);">No keywords yet</span>'}
-      </div>
+      <div class="words-cloud-pills">${wordsHtml || '<span>No words yet</span>'}</div>
       <div>
         <div class="live-feed-header">Recent Live Submissions</div>
         <div class="live-text-stream" style="margin-top: 10px;">
-          ${streamHtml}
+          ${entries.map(e => `<div class="text-entry-card">“${escapeHtml(e.text)}”</div>`).join('')}
         </div>
       </div>
     </div>
   `;
 }
 
-// Utility
 function escapeHtml(str) {
   if (!str) return '';
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
+  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-// Socket Events
-socket.on('connect', () => {
-  socket.emit('set_role', 'presenter');
-});
+// ----------------------------------------------------
+// Real-time Cloud Broker Pub/Sub Connection (Serverless)
+// ----------------------------------------------------
+let mqttClient = null;
+const TOPIC_VOTE = `bodtum/survey/${roomId}/vote`;
+const TOPIC_JOIN = `bodtum/survey/${roomId}/join`;
+const TOPIC_STATE = `bodtum/survey/${roomId}/state`;
 
-socket.on('participants_count', (count) => {
-  participantCount.textContent = count;
-});
+function connectRealtime(brokerIndex = 0) {
+  if (brokerIndex >= BROKERS.length) return;
+  const url = BROKERS[brokerIndex];
+  
+  mqttClient = mqtt.connect(url, {
+    clientId: 'presenter_' + Math.random().toString(36).substring(2, 9),
+    keepalive: 30,
+    reconnectPeriod: 2000
+  });
 
-socket.on('survey_state', (state) => {
-  renderSurvey(state);
-});
+  mqttClient.on('connect', () => {
+    console.log('Connected to real-time relay:', url);
+    mqttClient.subscribe(TOPIC_VOTE);
+    mqttClient.subscribe(TOPIC_JOIN);
+    broadcastState();
+  });
 
-socket.on('survey_updated', (state) => {
-  renderSurvey(state);
-});
+  mqttClient.on('message', (topic, message) => {
+    try {
+      const data = JSON.parse(message.toString());
+      if (topic === TOPIC_VOTE) {
+        handleIncomingVote(data);
+      } else if (topic === TOPIC_JOIN) {
+        activeParticipants.add(data.voterId || Math.random());
+        participantCount.textContent = activeParticipants.size;
+        broadcastState();
+      }
+    } catch (e) {
+      console.error('Error handling message:', e);
+    }
+  });
 
-socket.on('question_changed', (state) => {
-  renderSurvey(state);
-});
+  mqttClient.on('error', () => {
+    mqttClient.end(true);
+    connectRealtime(brokerIndex + 1);
+  });
+}
 
-socket.on('vote_recorded', () => {
+function handleIncomingVote(data) {
+  const { questionId, answer, voterId } = data;
+  if (!survey.acceptingVotes) return;
+
+  const q = survey.questions.find(item => item.id === questionId);
+  if (!q) return;
+
+  q.votes[voterId] = answer;
+  saveSurvey();
   notifier.playVoteChime();
-});
+  renderSurvey();
+  broadcastState();
+}
 
-// Initial boot
-loadConnectionInfo();
+function broadcastState() {
+  if (mqttClient && mqttClient.connected) {
+    const payload = JSON.stringify(getSurveyPayload());
+    // Retain message so new participants receive current state immediately
+    mqttClient.publish(TOPIC_STATE, payload, { retain: true, qos: 1 });
+  }
+}
+
+// Boot
+renderSurvey();
+connectRealtime();

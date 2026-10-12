@@ -142,7 +142,7 @@ fullscreenBtn.addEventListener('click', () => {
 openSimulatorBtn.addEventListener('click', () => {
   simulatorDrawer.classList.toggle('hidden');
   if (!simulatorDrawer.classList.contains('hidden')) {
-    simulatorFrame.src = '/vote?sim=' + Date.now();
+    simulatorFrame.src = './vote.html?sim=' + Date.now();
   }
 });
 
@@ -151,7 +151,7 @@ closeSimulatorBtn.addEventListener('click', () => {
 });
 
 openTabBtn.addEventListener('click', () => {
-  window.open('/vote', '_blank');
+  window.open('./vote.html', '_blank');
 });
 
 // Add Question Modal Type Toggle

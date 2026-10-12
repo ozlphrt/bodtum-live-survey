@@ -633,7 +633,7 @@ function handleIncomingVote(data) {
 function broadcastState() {
   if (mqttClient && mqttClient.connected) {
     const payload = JSON.stringify(getSurveyPayload());
-    mqttClient.publish(TOPIC_STATE, payload, { retain: true, qos: 1 });
+    mqttClient.publish(TOPIC_STATE, payload, { retain: false, qos: 1 });
   }
 }
 

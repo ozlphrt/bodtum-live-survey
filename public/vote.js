@@ -401,28 +401,30 @@ function connectRealtime(brokerIndex = 0) {
   mqttClient.on('message', (topic, message) => {
     try {
       if (topic === TOPIC_STATE) {
-        const state = JSON.parse(message.toString());
-
-        // 1. Explicitly inactive / session closed
-        if (state.isLive === false) {
+        if (!message || message.length === 0) {
+          showInactiveScreen();
+          return;
+        }
+        let state;
+        try {
+          state = JSON.parse(message.toString());
+        } catch (err) {
           showInactiveScreen();
           return;
         }
 
-        // 2. Check for stale retained messages from hours or days ago
+        // Strictly verify that the survey is actively live and has a recent timestamp from a live presenter
         const now = Date.now();
-        const isStale = state.timestamp && (now - state.timestamp > 45000);
+        const isFreshAndLive = (state && state.isLive === true && typeof state.timestamp === 'number' && (now - state.timestamp < 35000));
 
-        if (isStale) {
-          console.warn('Received stale retained survey state from past session. Pinging presenter...');
+        if (!isFreshAndLive) {
+          console.warn('Survey state is not actively live or is missing fresh timestamp. Showing inactive view.');
+          showInactiveScreen();
           publishPing();
-          if (!isLiveActive && !liveCheckTimer) {
-            startLiveDetectionTimer(2500);
-          }
           return;
         }
 
-        // 3. Verified live and active!
+        // Verified live and active from an online presenter!
         if (liveCheckTimer) {
           clearTimeout(liveCheckTimer);
           liveCheckTimer = null;
@@ -431,7 +433,7 @@ function connectRealtime(brokerIndex = 0) {
       } else if (topic === TOPIC_RESET) {
         const resetData = JSON.parse(message.toString());
         performClientReset(resetData.resetEpoch);
-        if (currentSurvey) {
+        if (currentSurvey && isLiveActive) {
           renderQuestion(currentSurvey);
         }
       }

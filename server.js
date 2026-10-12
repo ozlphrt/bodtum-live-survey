@@ -168,6 +168,8 @@ function getFullSurveyPayload() {
     activeQuestionIndex: survey.activeQuestionIndex,
     totalQuestions: survey.questions.length,
     acceptingVotes: survey.acceptingVotes,
+    isLive: true,
+    timestamp: Date.now(),
     activeQuestion: activeQ ? {
       ...activeQ,
       votesCount: Object.keys(activeQ.votes || {}).length,

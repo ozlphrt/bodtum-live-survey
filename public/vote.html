@@ -172,8 +172,8 @@
     }
 
     .spinner-sm {
-      width: 12px;
-      height: 12px;
+      width: 14px;
+      height: 14px;
       border: 2px solid var(--border);
       border-top-color: var(--text-primary);
       border-radius: 50%;
@@ -182,6 +182,150 @@
 
     @keyframes spin {
       to { transform: rotate(360deg); }
+    }
+
+    /* Survey Inactive & Loading States */
+    .inactive-icon-badge {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: rgba(245, 158, 11, 0.12);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+      color: var(--status-amber);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 14px;
+    }
+
+    .inactive-status-pill {
+      display: inline-block;
+      padding: 3px 10px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--status-amber);
+      background: rgba(245, 158, 11, 0.1);
+      border: 1px solid rgba(245, 158, 11, 0.25);
+      border-radius: 999px;
+      margin-bottom: 10px;
+    }
+
+    .inactive-en-sub {
+      font-size: 0.82rem;
+      color: var(--text-secondary);
+      font-style: italic;
+      margin-bottom: 20px;
+      opacity: 0.85;
+    }
+
+    .inactive-info-box {
+      background: var(--surface-raised);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      text-align: left;
+      margin-bottom: 18px;
+      font-size: 0.88rem;
+      line-height: 1.5;
+    }
+
+    .inactive-main-text {
+      color: var(--text-primary);
+      font-weight: 400;
+    }
+
+    .inactive-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 14px 0;
+    }
+
+    .inactive-pulse-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      color: var(--text-secondary);
+      font-size: 0.8rem;
+      line-height: 1.4;
+    }
+
+    .pulse-indicator {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #3b82f6;
+      box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
+      animation: radarPulse 1.8s infinite;
+      flex-shrink: 0;
+      margin-top: 4px;
+    }
+
+    @keyframes radarPulse {
+      0% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
+      }
+      70% {
+        transform: scale(1);
+        box-shadow: 0 0 0 8px rgba(59, 130, 246, 0);
+      }
+      100% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+      }
+    }
+
+    .room-indicator-box {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-size: 0.75rem;
+      color: var(--text-tertiary);
+      margin-bottom: 16px;
+    }
+
+    .room-code-tag {
+      font-family: ui-monospace, SFMono-Regular, monospace;
+      font-weight: 600;
+      color: var(--text-secondary);
+      background: rgba(255, 255, 255, 0.06);
+      padding: 3px 8px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+    }
+
+    .btn-retry {
+      width: 100%;
+      padding: 13px;
+      font-size: 0.92rem;
+      font-weight: 600;
+      border-radius: var(--radius-md);
+      background: var(--surface-raised);
+      color: var(--text-primary);
+      border: 1px solid var(--border-strong);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all var(--transition);
+      font-family: inherit;
+    }
+
+    .btn-retry:hover {
+      background: var(--surface-hover);
+      border-color: rgba(255, 255, 255, 0.25);
+    }
+
+    .btn-retry.checking .retry-spinner {
+      display: inline-block !important;
+    }
+
+    .btn-retry.checking .retry-icon {
+      display: none;
     }
   </style>
 </head>
@@ -194,11 +338,67 @@
         <div style="width: 1px; height: 18px; background: #e2e8f0;"></div>
         <img src="./bodtum-logo.png" alt="BODTÜM" style="height: 26px; width: auto; display: block;">
       </div>
-      <div class="pill" id="voterProgressTag" style="padding: 4px 10px; font-size: 0.75rem;">Bağlanıyor...</div>
+      <div class="pill" id="voterProgressTag" style="padding: 4px 10px; font-size: 0.75rem;">Kontrol ediliyor...</div>
     </header>
 
-    <!-- Question View -->
-    <div id="activeQuestionView">
+    <!-- 1. Initial Quick Live Check View -->
+    <div id="surveyLoadingView">
+      <div class="voter-card" style="text-align: center; padding: 48px 20px;">
+        <div class="spinner-sm" style="width: 28px; height: 28px; border-width: 3px; margin: 0 auto 18px auto; border-top-color: #3b82f6;"></div>
+        <h3 style="font-size: 1.15rem; font-weight: 600; color: #fff; margin-bottom: 6px;">Canlı Oturum Aranıyor...</h3>
+        <p style="color: var(--text-secondary); font-size: 0.85rem;">Sunum ve anket bağlantısı kontrol ediliyor</p>
+      </div>
+    </div>
+
+    <!-- 2. Survey Not Active / Inactive View -->
+    <div id="surveyInactiveView" style="display: none;">
+      <div class="voter-card" style="text-align: center; padding: 36px 20px 28px 20px;">
+        <div class="inactive-icon-badge">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+        </div>
+
+        <div>
+          <span class="inactive-status-pill">Oturum Aktif Değil</span>
+        </div>
+
+        <h2 class="voter-title" style="font-size: 1.35rem; margin-top: 4px; margin-bottom: 6px;">
+          Anket Şu Anda Aktif Değil
+        </h2>
+
+        <div class="inactive-en-sub">
+          The survey is not active to capture your response
+        </div>
+
+        <div class="inactive-info-box">
+          <p class="inactive-main-text">
+            Bu QR kod geçmiş bir sunum veya slayttan taranmış olabilir. Yanıtlarınızı kaydetmek için şu anda canlı bir anket oturumu bulunmuyor.
+          </p>
+          <div class="inactive-divider"></div>
+          <div class="inactive-pulse-row">
+            <span class="pulse-indicator"></span>
+            <span>Canlı sunum bekleniyor... Sunucu canlı oturumu başlattığında bu ekran otomatik olarak açılacaktır.</span>
+          </div>
+        </div>
+
+        <div class="room-indicator-box">
+          <span>Oturum Kodu:</span>
+          <span class="room-code-tag" id="inactiveRoomCode">...</span>
+        </div>
+
+        <button type="button" class="btn-retry" id="retryConnectionBtn">
+          <span class="retry-icon">↺</span>
+          <div class="spinner-sm retry-spinner" style="display: none; width: 14px; height: 14px; margin-right: 4px;"></div>
+          <span class="retry-text">Yeniden Kontrol Et</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- 3. Active Question View -->
+    <div id="activeQuestionView" style="display: none;">
       <div class="voter-card">
         <h2 class="voter-title" id="voterQTitle">Soru yükleniyor...</h2>
         <div class="voter-sub" id="voterQSubtitle"></div>
@@ -212,7 +412,7 @@
       </button>
     </div>
 
-    <!-- Feedback View -->
+    <!-- 4. Feedback View (After voting) -->
     <div id="votedFeedbackView" style="display: none;">
       <div class="success-box">
         <div class="success-icon">✓</div>
@@ -233,7 +433,7 @@
       </div>
     </div>
 
-    <!-- Locked View -->
+    <!-- 5. Locked View -->
     <div id="lockedView" style="display: none;">
       <div class="voter-card" style="text-align: center; padding: 40px 20px;">
         <h3 style="font-size: 1.15rem; margin-bottom: 6px;">Oylama Duraklatıldı</h3>
@@ -243,6 +443,6 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/mqtt@5.3.5/dist/mqtt.min.js"></script>
-  <script src="./vote.js?v=7"></script>
+  <script src="./vote.js?v=8"></script>
 </body>
 </html>

@@ -214,6 +214,8 @@ function getSurveyPayload() {
     activeQuestionIndex: survey.activeQuestionIndex,
     totalQuestions: survey.questions.length,
     acceptingVotes: survey.acceptingVotes,
+    isLive: true,
+    timestamp: Date.now(),
     activeQuestion: activeQ ? {
       ...activeQ,
       votesCount: Object.keys(activeQ.votes || {}).length,
@@ -562,6 +564,7 @@ let mqttClient = null;
 const TOPIC_VOTE = `bodtum/survey/${roomId}/vote`;
 const TOPIC_JOIN = `bodtum/survey/${roomId}/join`;
 const TOPIC_STATE = `bodtum/survey/${roomId}/state`;
+const TOPIC_PING = `bodtum/survey/${roomId}/ping`;
 
 function connectRealtime(brokerIndex = 0) {
   if (brokerIndex >= BROKERS.length) return;
@@ -570,13 +573,20 @@ function connectRealtime(brokerIndex = 0) {
   mqttClient = mqtt.connect(url, {
     clientId: 'presenter_' + Math.random().toString(36).substring(2, 9),
     keepalive: 30,
-    reconnectPeriod: 2000
+    reconnectPeriod: 2000,
+    will: {
+      topic: TOPIC_STATE,
+      payload: JSON.stringify({ isLive: false, endedAt: Date.now(), roomId }),
+      retain: true,
+      qos: 1
+    }
   });
 
   mqttClient.on('connect', () => {
     console.log('Connected to real-time relay:', url);
     mqttClient.subscribe(TOPIC_VOTE);
     mqttClient.subscribe(TOPIC_JOIN);
+    mqttClient.subscribe(TOPIC_PING);
     broadcastState();
   });
 
@@ -586,8 +596,13 @@ function connectRealtime(brokerIndex = 0) {
       if (topic === TOPIC_VOTE) {
         handleIncomingVote(data);
       } else if (topic === TOPIC_JOIN) {
-        activeParticipants.add(data.voterId || Math.random());
-        participantCount.textContent = activeParticipants.size;
+        if (data.voterId) {
+          activeParticipants.add(data.voterId);
+          participantCount.textContent = activeParticipants.size;
+        }
+        broadcastState();
+      } else if (topic === TOPIC_PING) {
+        // Immediate response with fresh timestamp so voter knows presenter is live
         broadcastState();
       }
     } catch (e) {
@@ -621,6 +636,21 @@ function broadcastState() {
     mqttClient.publish(TOPIC_STATE, payload, { retain: true, qos: 1 });
   }
 }
+
+// Periodic heartbeat broadcast every 10s to keep liveness timestamp fresh
+setInterval(() => {
+  if (mqttClient && mqttClient.connected) {
+    broadcastState();
+  }
+}, 10000);
+
+// Notify participants when presenter leaves / closes window
+window.addEventListener('beforeunload', () => {
+  if (mqttClient && mqttClient.connected) {
+    const offlinePayload = JSON.stringify({ isLive: false, endedAt: Date.now(), roomId });
+    mqttClient.publish(TOPIC_STATE, offlinePayload, { retain: true, qos: 1 });
+  }
+});
 
 // Keyboard Shortcuts for Presenter (Arrow keys, Space, L, F)
 window.addEventListener('keydown', (e) => {

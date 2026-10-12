@@ -22,9 +22,13 @@ let currentSurvey = null;
 let currentQuestionId = null;
 let selectedAnswer = null; // String (for single) or Array (for multi)
 let hasVotedCurrent = false;
+let isLiveActive = false;
+let liveCheckTimer = null;
 
 // DOM Elements
 const voterProgressTag = document.getElementById('voterProgressTag');
+const surveyLoadingView = document.getElementById('surveyLoadingView');
+const surveyInactiveView = document.getElementById('surveyInactiveView');
 const activeQuestionView = document.getElementById('activeQuestionView');
 const votedFeedbackView = document.getElementById('votedFeedbackView');
 const lockedView = document.getElementById('lockedView');
@@ -32,6 +36,35 @@ const voterQTitle = document.getElementById('voterQTitle');
 const voterInputArea = document.getElementById('voterInputArea');
 const voterSubmitBtn = document.getElementById('voterSubmitBtn');
 const voterLiveResults = document.getElementById('voterLiveResults');
+const retryConnectionBtn = document.getElementById('retryConnectionBtn');
+const inactiveRoomCode = document.getElementById('inactiveRoomCode');
+
+if (inactiveRoomCode) {
+  inactiveRoomCode.textContent = roomId;
+}
+
+// Show Inactive State Screen
+function showInactiveScreen() {
+  isLiveActive = false;
+  if (surveyLoadingView) surveyLoadingView.style.display = 'none';
+  if (activeQuestionView) activeQuestionView.style.display = 'none';
+  if (votedFeedbackView) votedFeedbackView.style.display = 'none';
+  if (lockedView) lockedView.style.display = 'none';
+  if (surveyInactiveView) surveyInactiveView.style.display = 'block';
+
+  voterProgressTag.textContent = 'Oturum Aktif Değil';
+  voterProgressTag.style.color = 'var(--status-amber)';
+}
+
+// Start Liveness Timeout
+function startLiveDetectionTimer(ms = 4000) {
+  if (liveCheckTimer) clearTimeout(liveCheckTimer);
+  liveCheckTimer = setTimeout(() => {
+    if (!isLiveActive) {
+      showInactiveScreen();
+    }
+  }, ms);
+}
 
 // Reset client state when survey host resets
 function performClientReset(newEpoch) {
@@ -49,8 +82,17 @@ function performClientReset(newEpoch) {
 // Render Question Form
 function renderQuestion(state) {
   currentSurvey = state;
+  isLiveActive = true;
+
+  if (surveyLoadingView) surveyLoadingView.style.display = 'none';
+  if (surveyInactiveView) surveyInactiveView.style.display = 'none';
+  voterProgressTag.style.color = '';
+
   const activeQ = state.activeQuestion;
-  if (!activeQ) return;
+  if (!activeQ) {
+    showInactiveScreen();
+    return;
+  }
 
   // Handle Host Reset (detect change in resetEpoch)
   const incomingEpoch = state.resetEpoch ? state.resetEpoch.toString() : null;
@@ -66,6 +108,7 @@ function renderQuestion(state) {
     activeQuestionView.style.display = 'none';
     votedFeedbackView.style.display = 'none';
     lockedView.style.display = 'block';
+    voterProgressTag.textContent = `Soru ${state.activeQuestionIndex + 1} / ${state.totalQuestions} (Kilitli)`;
     return;
   } else {
     lockedView.style.display = 'none';
@@ -323,9 +366,19 @@ const TOPIC_VOTE = `bodtum/survey/${roomId}/vote`;
 const TOPIC_JOIN = `bodtum/survey/${roomId}/join`;
 const TOPIC_STATE = `bodtum/survey/${roomId}/state`;
 const TOPIC_RESET = `bodtum/survey/${roomId}/reset`;
+const TOPIC_PING = `bodtum/survey/${roomId}/ping`;
+
+function publishPing() {
+  if (mqttClient && mqttClient.connected) {
+    mqttClient.publish(TOPIC_PING, JSON.stringify({ voterId, t: Date.now() }));
+  }
+}
 
 function connectRealtime(brokerIndex = 0) {
-  if (brokerIndex >= BROKERS.length) return;
+  if (brokerIndex >= BROKERS.length) {
+    showInactiveScreen();
+    return;
+  }
   const url = BROKERS[brokerIndex];
 
   mqttClient = mqtt.connect(url, {
@@ -335,16 +388,45 @@ function connectRealtime(brokerIndex = 0) {
   });
 
   mqttClient.on('connect', () => {
-    voterProgressTag.textContent = '🟢 Canlı Bağlandı';
+    if (!isLiveActive) {
+      voterProgressTag.textContent = 'Bağlandı, aranıyor...';
+    }
     mqttClient.subscribe(TOPIC_STATE);
     mqttClient.subscribe(TOPIC_RESET);
-    mqttClient.publish(TOPIC_JOIN, JSON.stringify({ voterId }));
+    mqttClient.publish(TOPIC_JOIN, JSON.stringify({ voterId, t: Date.now() }));
+    publishPing();
+    startLiveDetectionTimer(4200);
   });
 
   mqttClient.on('message', (topic, message) => {
     try {
       if (topic === TOPIC_STATE) {
         const state = JSON.parse(message.toString());
+
+        // 1. Explicitly inactive / session closed
+        if (state.isLive === false) {
+          showInactiveScreen();
+          return;
+        }
+
+        // 2. Check for stale retained messages from hours or days ago
+        const now = Date.now();
+        const isStale = state.timestamp && (now - state.timestamp > 45000);
+
+        if (isStale) {
+          console.warn('Received stale retained survey state from past session. Pinging presenter...');
+          publishPing();
+          if (!isLiveActive && !liveCheckTimer) {
+            startLiveDetectionTimer(2500);
+          }
+          return;
+        }
+
+        // 3. Verified live and active!
+        if (liveCheckTimer) {
+          clearTimeout(liveCheckTimer);
+          liveCheckTimer = null;
+        }
         renderQuestion(state);
       } else if (topic === TOPIC_RESET) {
         const resetData = JSON.parse(message.toString());
@@ -371,5 +453,31 @@ function publishVote(questionId, answer) {
   }
 }
 
+// Retry Connection Button
+if (retryConnectionBtn) {
+  retryConnectionBtn.addEventListener('click', () => {
+    retryConnectionBtn.classList.add('checking');
+    voterProgressTag.textContent = 'Kontrol ediliyor...';
+    voterProgressTag.style.color = '';
+
+    publishPing();
+    if (mqttClient && mqttClient.connected) {
+      mqttClient.publish(TOPIC_JOIN, JSON.stringify({ voterId, t: Date.now() }));
+    }
+
+    startLiveDetectionTimer(3000);
+
+    setTimeout(() => {
+      retryConnectionBtn.classList.remove('checking');
+      if (!isLiveActive) {
+        voterProgressTag.textContent = 'Oturum Aktif Değil';
+        voterProgressTag.style.color = 'var(--status-amber)';
+      }
+    }, 2000);
+  });
+}
+
 // Boot
+startLiveDetectionTimer(5000);
 connectRealtime();
+

@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BODTUM Live Survey & Real-Time Results</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <!-- Ambient background glow lights -->
+  <div class="ambient-glow glow-top-right"></div>
+  <div class="ambient-glow glow-bottom-left"></div>
+
+  <!-- Top Header Navigation -->
+  <header>
+    <div class="brand">
+      <div class="brand-badge">BODTUM</div>
+      <div>
+        <div class="brand-title">Live Audience Poll & Survey</div>
+        <div class="brand-subtitle">Real-time instant results dashboard</div>
+      </div>
+    </div>
+
+    <div class="header-status">
+      <div class="badge" id="participantBadge" title="Live active connected clients">
+        <span class="status-dot"></span>
+        <span id="participantCount">0</span> participants connected
+      </div>
+      <button class="sound-toggle active" id="soundToggle" title="Toggle audio chime on votes">
+        🔔 Sound On
+      </button>
+      <button class="btn-secondary" id="fullscreenBtn" style="width: auto; padding: 7px 14px;" title="Toggle Fullscreen presentation">
+        ⛶ Fullscreen
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Presenter Layout -->
+  <main class="presenter-layout">
+    <!-- QR Code & Join Panel -->
+    <aside class="join-card">
+      <div class="join-step-badge">Instant Join</div>
+      <h3>Scan to Vote</h3>
+      <p>Point your mobile camera to answer live. No app or registration required!</p>
+
+      <div class="qr-frame">
+        <img id="qrImage" class="qr-image" src="" alt="Scan QR Code to Join">
+      </div>
+
+      <div class="join-url-box">
+        <span class="join-url-text" id="joinUrlText">Loading join URL...</span>
+        <button class="copy-btn" id="copyUrlBtn">Copy</button>
+      </div>
+
+      <div class="quick-tools">
+        <button class="btn-secondary" id="openSimulatorBtn">
+          📱 Test in Mobile Simulator
+        </button>
+        <button class="btn-secondary" id="openTabBtn">
+          ↗ Open Voter View in Tab
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Presentation Stage -->
+    <section class="presentation-main">
+      <div class="question-stage" id="questionStage">
+        <!-- Question Meta & Title -->
+        <div class="stage-header">
+          <div>
+            <div class="question-meta">
+              <span class="question-index-tag" id="qIndexTag">Question 1 of 4</span>
+              <span class="question-type-tag" id="qTypeTag">Multiple Choice</span>
+              <span class="badge" id="lockStatusBadge" style="display: none; background: rgba(239, 68, 68, 0.15); border-color: rgba(239, 68, 68, 0.4); color: #fca5a5;">
+                🔒 Voting Locked
+              </span>
+            </div>
+            <h1 class="question-title" id="qTitle">Loading live survey...</h1>
+          </div>
+
+          <div class="live-votes-badge">
+            <span class="votes-count-number" id="qVoteTotal">0</span>
+            <span class="votes-count-label">Responses</span>
+          </div>
+        </div>
+
+        <!-- Dynamic Results Container -->
+        <div class="results-container" id="resultsContainer">
+          <!-- Rendered via JavaScript: Options Bars / Rating / Wordcloud -->
+          <div class="empty-state">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+            </svg>
+            <p>Waiting for participants to submit their responses...</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Presenter Action Toolbar -->
+      <footer class="presenter-toolbar">
+        <div class="nav-controls">
+          <button class="btn-secondary" id="prevBtn" style="width: auto;">
+            ◀ Previous
+          </button>
+          <button class="btn-primary" id="nextBtn">
+            Next Question ▶
+          </button>
+        </div>
+
+        <div class="tool-group">
+          <button class="btn-secondary" id="toggleLockBtn" style="width: auto;">
+            🔒 Lock Voting
+          </button>
+          <button class="btn-secondary" id="addQuestionBtn" style="width: auto;">
+            ➕ Add Question
+          </button>
+          <button class="btn-danger" id="resetBtn">
+            ↺ Reset Results
+          </button>
+        </div>
+      </footer>
+    </section>
+  </main>
+
+  <!-- Mobile Phone Simulator Drawer -->
+  <div class="simulator-drawer hidden" id="simulatorDrawer">
+    <div class="simulator-header">
+      <span class="simulator-title">📱 Live Mobile Phone Preview</span>
+      <button class="simulator-close" id="closeSimulatorBtn">&times;</button>
+    </div>
+    <iframe class="simulator-frame" id="simulatorFrame" src="/vote"></iframe>
+  </div>
+
+  <!-- Add Question Modal -->
+  <dialog id="questionModal" style="background: #111827; color: #fff; border: 1px solid rgba(255,255,255,0.15); border-radius: 18px; padding: 28px; width: 90%; max-width: 520px; margin: auto; backdrop-filter: blur(25px); box-shadow: 0 25px 50px rgba(0,0,0,0.8);">
+    <h3 style="margin-bottom: 16px; font-size: 1.4rem;">Add New Poll Question</h3>
+    <form id="newQuestionForm" method="dialog" style="display: flex; flex-direction: column; gap: 14px;">
+      <div>
+        <label style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px;">Question Title</label>
+        <input type="text" id="modalQTitle" required placeholder="e.g. What topics should we cover next?" style="width: 100%; padding: 10px 14px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; color: #fff; font-size: 0.95rem;">
+      </div>
+
+      <div>
+        <label style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px;">Question Type</label>
+        <select id="modalQType" style="width: 100%; padding: 10px 14px; background: #1e293b; border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; color: #fff; font-size: 0.95rem;">
+          <option value="single">Multiple Choice Poll</option>
+          <option value="rating">1 - 5 Star Rating</option>
+          <option value="wordcloud">Open Text / Word Cloud</option>
+        </select>
+      </div>
+
+      <div id="modalOptionsGroup">
+        <label style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px;">Choices (One per line)</label>
+        <textarea id="modalQOptions" rows="4" placeholder="Option 1&#10;Option 2&#10;Option 3" style="width: 100%; padding: 10px 14px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; color: #fff; font-size: 0.95rem; resize: vertical;"></textarea>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
+        <button type="button" id="modalCancelBtn" class="btn-secondary" style="width: auto;">Cancel</button>
+        <button type="submit" class="btn-primary">Create Question</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Socket.io client script (CDN works on GitHub Pages, Render & Local) -->
+  <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
+  <script src="/app.js"></script>
+</body>
+</html>

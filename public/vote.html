@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Vote | BODTUM Live Survey</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+  <style>
+    /* Voter Mobile Optimized Styles */
+    body {
+      background: #080c14;
+      padding: 0;
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .voter-container {
+      width: 100%;
+      max-width: 520px;
+      margin: 0 auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      position: relative;
+      z-index: 10;
+    }
+
+    .voter-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 0 20px 0;
+      border-bottom: 1px solid var(--card-border);
+      margin-bottom: 24px;
+    }
+
+    .voter-brand {
+      font-weight: 800;
+      font-size: 1.1rem;
+      letter-spacing: 0.5px;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .voter-progress {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      background: rgba(255, 255, 255, 0.05);
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--card-border);
+    }
+
+    .vote-question-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(25px);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      box-shadow: var(--shadow-lg);
+      margin-bottom: 20px;
+    }
+
+    .voter-q-title {
+      font-size: 1.45rem;
+      font-weight: 700;
+      line-height: 1.35;
+      color: #fff;
+      margin-bottom: 24px;
+    }
+
+    /* Option Tap Buttons */
+    .options-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .option-btn {
+      position: relative;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1.5px solid var(--card-border);
+      border-radius: var(--radius-md);
+      padding: 18px 20px;
+      color: var(--text-main);
+      font-size: 1.05rem;
+      font-weight: 600;
+      text-align: left;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .option-btn:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(99, 102, 241, 0.4);
+    }
+
+    .option-btn:active {
+      transform: scale(0.98);
+    }
+
+    .option-btn.selected {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.25), rgba(6, 182, 212, 0.25));
+      border-color: var(--secondary);
+      box-shadow: 0 0 20px rgba(6, 182, 212, 0.3);
+      color: #fff;
+    }
+
+    .option-check {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: all 0.2s ease;
+    }
+
+    .option-btn.selected .option-check {
+      background: var(--secondary);
+      border-color: var(--secondary);
+      color: #080c14;
+    }
+
+    /* Rating Stars Buttons */
+    .rating-row-interactive {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      margin: 16px 0;
+    }
+
+    .star-btn {
+      flex: 1;
+      height: 64px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-md);
+      color: #94a3b8;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .star-btn .star-icon {
+      font-size: 1.4rem;
+    }
+
+    .star-btn .star-num {
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+
+    .star-btn.active, .star-btn:hover {
+      background: rgba(245, 158, 11, 0.15);
+      border-color: var(--accent-amber);
+      color: var(--accent-amber);
+      transform: translateY(-2px);
+    }
+
+    .rating-label-hint {
+      text-align: center;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--accent-amber);
+      min-height: 24px;
+      margin-top: 10px;
+    }
+
+    /* Text Input Box */
+    .word-input-container {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .text-input-field {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.4);
+      border: 1.5px solid var(--card-border);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      color: #fff;
+      font-size: 1.1rem;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.2s ease;
+    }
+
+    .text-input-field:focus {
+      border-color: var(--secondary);
+      box-shadow: 0 0 15px var(--secondary-glow);
+    }
+
+    /* Submit Button */
+    .voter-submit-btn {
+      width: 100%;
+      padding: 16px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      border-radius: var(--radius-md);
+      margin-top: 16px;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      box-shadow: 0 6px 20px var(--primary-glow);
+      transition: all 0.2s ease;
+    }
+
+    .voter-submit-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none !important;
+      box-shadow: none !important;
+    }
+
+    /* Voted Success State */
+    .voted-feedback-card {
+      background: rgba(16, 185, 129, 0.08);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      border-radius: var(--radius-lg);
+      padding: 28px 20px;
+      text-align: center;
+      margin-bottom: 24px;
+      animation: fadeIn 0.4s ease;
+    }
+
+    .success-icon-badge {
+      width: 60px;
+      height: 60px;
+      background: var(--accent-green);
+      color: #080c14;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.8rem;
+      font-weight: 900;
+      margin-bottom: 16px;
+      box-shadow: 0 0 25px rgba(16, 185, 129, 0.4);
+    }
+
+    .waiting-bar {
+      margin-top: 20px;
+      padding: 12px;
+      background: rgba(255, 255, 255, 0.04);
+      border-radius: var(--radius-md);
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .spinner {
+      width: 14px;
+      height: 14px;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      border-top-color: var(--secondary);
+      border-radius: 50%;
+      animation: spin 1s infinite linear;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <!-- Ambient background glow -->
+  <div class="ambient-glow glow-top-right"></div>
+  <div class="ambient-glow glow-bottom-left"></div>
+
+  <div class="voter-container">
+    <!-- Header -->
+    <header class="voter-header" style="background: none; border-bottom: 1px solid var(--card-border); padding: 0 0 16px 0;">
+      <div class="voter-brand">BODTUM Live Poll</div>
+      <div class="voter-progress" id="voterProgressTag">Connecting...</div>
+    </header>
+
+    <!-- Question View (When answering) -->
+    <div id="activeQuestionView">
+      <div class="vote-question-card">
+        <h2 class="voter-q-title" id="voterQTitle">Loading current question...</h2>
+        <div id="voterInputArea">
+          <!-- Dynamically injected choices or inputs -->
+        </div>
+      </div>
+
+      <button class="voter-submit-btn" id="voterSubmitBtn" disabled>
+        Submit Response 🚀
+      </button>
+    </div>
+
+    <!-- Feedback View (After submitting response) -->
+    <div id="votedFeedbackView" style="display: none;">
+      <div class="voted-feedback-card">
+        <div class="success-icon-badge">✓</div>
+        <h3 style="font-size: 1.4rem; font-weight: 700; color: #fff; margin-bottom: 6px;">Vote Recorded!</h3>
+        <p style="color: var(--text-muted); font-size: 0.95rem;">Thank you! Your response has been added to the live survey results.</p>
+        
+        <div class="waiting-bar">
+          <div class="spinner"></div>
+          <span>Waiting for host to switch to the next question...</span>
+        </div>
+      </div>
+
+      <!-- Live Results Preview on Phone -->
+      <div class="vote-question-card">
+        <div style="font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--secondary); margin-bottom: 14px;">
+          Live Crowd Results
+        </div>
+        <div id="voterLiveResults">
+          <!-- Injected bar percentages -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Locked Voting View -->
+    <div id="lockedView" style="display: none;">
+      <div class="vote-question-card" style="text-align: center; padding: 40px 20px;">
+        <div style="font-size: 2.5rem; margin-bottom: 12px;">🔒</div>
+        <h3 style="font-size: 1.3rem; margin-bottom: 8px;">Voting is Currently Paused</h3>
+        <p style="color: var(--text-muted); font-size: 0.9rem;">The presenter has temporarily paused responses. Stay on this screen; it will resume automatically.</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
+  <script src="/vote.js"></script>
+</body>
+</html>

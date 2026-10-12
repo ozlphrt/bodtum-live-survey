@@ -262,30 +262,38 @@ const voterJoinUrl = getVoterUrl();
 joinUrlText.textContent = voterJoinUrl;
 joinUrlText.title = voterJoinUrl;
 
-// Fail-safe Instant QR Code Generation
-const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&margin=0&color=09-0d-16&bgcolor=ffffff&data=${encodeURIComponent(voterJoinUrl)}`;
+// Render Vector SVG QR Code directly from local qrcode.js
+function renderQrCode(url) {
+  const box = document.getElementById('qrcodeBox');
+  if (!box) return;
 
-if (qrImage) {
-  qrImage.src = qrApiUrl;
-}
-
-if (window.QRCode && qrcodeBox) {
   try {
-    qrcodeBox.innerHTML = '';
-    new QRCode(qrcodeBox, {
-      text: voterJoinUrl,
-      width: 210,
-      height: 210,
-      colorDark: '#090d16',
-      colorLight: '#ffffff',
-      correctLevel: QRCode.CorrectLevel.M
-    });
-  } catch (err) {
-    if (qrcodeBox) {
-      qrcodeBox.innerHTML = `<img src="${qrApiUrl}" style="width: 210px; height: 210px; display: block; border-radius: 8px;" alt="QR Code" />`;
+    if (typeof qrcode === 'function') {
+      const qr = qrcode(0, 'M');
+      qr.addData(url);
+      qr.make();
+      box.innerHTML = qr.createSvgTag({
+        cellSize: 6,
+        margin: 1,
+        scalable: true
+      });
+      const svg = box.querySelector('svg');
+      if (svg) {
+        svg.style.width = '100%';
+        svg.style.height = '100%';
+        svg.style.display = 'block';
+        return;
+      }
     }
+  } catch (e) {
+    console.warn('Local QR error, falling back to image:', e);
   }
+
+  // Fallback to direct image
+  box.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(url)}" style="width: 100%; height: 100%; display: block; border-radius: 8px;" alt="QR Code" />`;
 }
+
+renderQrCode(voterJoinUrl);
 
 // Copy button
 copyUrlBtn.addEventListener('click', () => {

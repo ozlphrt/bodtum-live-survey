@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>BODTUM Canlı Oylama</title>
+  <title>BODTÜM Canlı Oylama</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./style.css">
+  <link rel="stylesheet" href="./style.css?v=3">
   <style>
     /* Voter Mobile Optimized Styles */
     body {
@@ -307,7 +307,10 @@
   <div class="voter-container">
     <!-- Header -->
     <header class="voter-header" style="background: none; border-bottom: 1px solid var(--card-border); padding: 0 0 16px 0;">
-      <div class="voter-brand">BODTUM Canlı Anket</div>
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <img src="./bodtum-logo.png" alt="BODTÜM Logo" style="height: 38px; width: auto; object-fit: contain; border-radius: 6px;">
+        <div class="voter-brand">BODTÜM Canlı Anket</div>
+      </div>
       <div class="voter-progress" id="voterProgressTag">Bağlanıyor...</div>
     </header>
 
@@ -361,6 +364,6 @@
 
   <!-- Pure Serverless Real-Time Client Library -->
   <script src="https://cdn.jsdelivr.net/npm/mqtt@5.3.5/dist/mqtt.min.js"></script>
-  <script src="./vote.js"></script>
+  <script src="./vote.js?v=3"></script>
 </body>
 </html>

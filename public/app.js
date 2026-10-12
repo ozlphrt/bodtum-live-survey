@@ -1,4 +1,4 @@
-// Presenter Dashboard - 100% Serverless GitHub Pages Real-Time Engine
+// Presenter Dashboard - BODTUM Yapay Zeka Canlı Anketi
 
 // Multi-Broker List with Automatic Fallback
 const BROKERS = [
@@ -64,55 +64,67 @@ class AudioNotifier {
 
 const notifier = new AudioNotifier();
 
-// Default Survey Structure
+// Exactly the 3 Turkish AI Survey Questions requested by the user
 const DEFAULT_SURVEY = {
-  title: "BODTUM Live Usage & Experience Survey",
+  title: "BODTUM Yapay Zeka Canlı Anketi",
   activeQuestionIndex: 0,
   acceptingVotes: true,
   questions: [
     {
       id: "q1",
       type: "single",
-      title: "How often do you engage with BODTUM platforms & services?",
+      title: "Yapay zekayı ne sıklıkla kullanıyorsunuz?",
       options: [
-        { id: "opt1", text: "🚀 Daily - It's part of my routine" },
-        { id: "opt2", text: "📅 Weekly - Several times a week" },
-        { id: "opt3", text: "☕ Monthly - When specific needs arise" },
-        { id: "opt4", text: "✨ First time / Just exploring today" }
+        { id: "opt1_1", text: "Hiç kullanmadım" },
+        { id: "opt1_2", text: "Birkaç kez denedim" },
+        { id: "opt1_3", text: "Ara sıra kullanıyorum" },
+        { id: "opt1_4", text: "Hemen hemen her gün" }
       ],
       votes: {}
     },
     {
       id: "q2",
-      type: "single",
-      title: "Which core service or capability do you find most valuable?",
+      type: "multi",
+      title: "Yapay zekayı hangi amaçlarla kullanıyorsunuz?",
+      subtitle: "(Birden fazla seçenek seçilebilir)",
       options: [
-        { id: "opt1", text: "🤝 Community Network & Peer Collaboration" },
-        { id: "opt2", text: "💡 Knowledge Base, Guides & Docs" },
-        { id: "opt3", text: "⚡ Rapid Response Tools & Automations" },
-        { id: "opt4", text: "🎓 Workshops, Events & Mentorship" }
+        { id: "opt2_1", text: "🔍 Araştırma ve bilgi edinme" },
+        { id: "opt2_2", text: "✍️ Yazı yazma, çeviri ve özetleme" },
+        { id: "opt2_3", text: "🎨 Fotoğraf, görsel veya müzik üretimi" },
+        { id: "opt2_4", text: "💻 Kod yazma veya uygulama geliştirme" },
+        { id: "opt2_5", text: "📅 Planlama ve günlük işler" },
+        { id: "opt2_6", text: "🚫 Henüz kullanmıyorum" }
       ],
       votes: {}
     },
     {
       id: "q3",
-      type: "rating",
-      title: "How would you rate your overall experience so far?",
-      labels: ["Poor", "Fair", "Good", "Very Good", "Exceptional 🌟"],
-      votes: {}
-    },
-    {
-      id: "q4",
-      type: "wordcloud",
-      title: "In 1 to 3 words, what feature or improvement would you like next?",
-      placeholder: "e.g. mobile app, faster sync, dark theme...",
+      type: "single",
+      title: "Bugün en çok neyi merak ediyorsunuz?",
+      options: [
+        { id: "opt3_1", text: "💡 Yapay zekayı günlük hayatımda nasıl kullanabilirim?" },
+        { id: "opt3_2", text: "🚀 Yapay zeka ile neler üretebilirim?" },
+        { id: "opt3_3", text: "⚙️ Yapay zeka nasıl çalışıyor?" },
+        { id: "opt3_4", text: "🛡️ Riskleri ve sınırları neler?" }
+      ],
       votes: {}
     }
   ]
 };
 
-// Load or Initialize State
-let survey = JSON.parse(localStorage.getItem(`survey_state_${roomId}`)) || DEFAULT_SURVEY;
+// Initialize or update state (ensure latest question structure)
+let survey = DEFAULT_SURVEY;
+try {
+  const saved = localStorage.getItem(`survey_state_${roomId}`);
+  if (saved) {
+    const parsed = JSON.parse(saved);
+    // If questions match the 3 Turkish questions, preserve votes, otherwise update to new questions
+    if (parsed.questions && parsed.questions.length === 3 && parsed.questions[0].title.includes("Yapay zeka")) {
+      survey = parsed;
+    }
+  }
+} catch (e) {}
+
 let activeParticipants = new Set();
 
 function saveSurvey() {
@@ -124,11 +136,18 @@ function calculateResults(q) {
   if (!q) return { totalVotes: 0 };
   const totalVotes = Object.keys(q.votes || {}).length;
 
-  if (q.type === 'single') {
+  if (q.type === 'single' || q.type === 'multi') {
     const counts = {};
     q.options.forEach(opt => counts[opt.id] = 0);
-    Object.values(q.votes).forEach(optId => {
-      if (counts[optId] !== undefined) counts[optId]++;
+
+    Object.values(q.votes).forEach(val => {
+      if (Array.isArray(val)) {
+        val.forEach(optId => {
+          if (counts[optId] !== undefined) counts[optId]++;
+        });
+      } else if (counts[val] !== undefined) {
+        counts[val]++;
+      }
     });
 
     const breakdown = q.options.map(opt => ({
@@ -153,7 +172,7 @@ function calculateResults(q) {
     const average = totalVotes > 0 ? (sum / totalVotes).toFixed(1) : "0.0";
     const breakdown = [1, 2, 3, 4, 5].map(star => ({
       rating: star,
-      label: q.labels[star - 1],
+      label: (q.labels || ["1", "2", "3", "4", "5"])[star - 1],
       count: counts[star],
       percentage: totalVotes > 0 ? Math.round((counts[star] / totalVotes) * 100) : 0
     }));
@@ -227,7 +246,6 @@ const simulatorFrame = document.getElementById('simulatorFrame');
 // Compute Voter URL
 function getVoterUrl() {
   const url = new URL(window.location.href);
-  // Replace index.html or root with vote.html
   let path = url.pathname;
   if (path.endsWith('/') || path.endsWith('/index.html')) {
     path = path.replace(/index\.html$/, '').replace(/\/$/, '') + '/vote.html';
@@ -256,7 +274,7 @@ if (window.QRCode && qrCanvas) {
 copyUrlBtn.addEventListener('click', () => {
   navigator.clipboard.writeText(voterJoinUrl).then(() => {
     const original = copyUrlBtn.textContent;
-    copyUrlBtn.textContent = 'Copied!';
+    copyUrlBtn.textContent = 'Kopyalandı!';
     setTimeout(() => copyUrlBtn.textContent = original, 2000);
   });
 });
@@ -266,11 +284,11 @@ soundToggle.addEventListener('click', () => {
   notifier.enabled = !notifier.enabled;
   if (notifier.enabled) {
     soundToggle.classList.add('active');
-    soundToggle.textContent = '🔔 Sound On';
+    soundToggle.textContent = '🔔 Ses Açık';
     notifier.playVoteChime();
   } else {
     soundToggle.classList.remove('active');
-    soundToggle.textContent = '🔕 Sound Off';
+    soundToggle.textContent = '🔕 Ses Kapalı';
   }
 });
 
@@ -301,7 +319,7 @@ const modalQType = document.getElementById('modalQType');
 const modalOptionsGroup = document.getElementById('modalOptionsGroup');
 
 modalQType.addEventListener('change', () => {
-  modalOptionsGroup.style.display = modalQType.value === 'single' ? 'block' : 'none';
+  modalOptionsGroup.style.display = (modalQType.value === 'single' || modalQType.value === 'multi') ? 'block' : 'none';
 });
 
 addQuestionBtn.addEventListener('click', () => questionModal.showModal());
@@ -319,9 +337,9 @@ newQuestionForm.addEventListener('submit', (e) => {
     id: 'q_' + Date.now(),
     type,
     title,
-    options: type === 'single' ? options.map((opt, i) => ({ id: `opt_${Date.now()}_${i}`, text: opt })) : [],
-    labels: ["Poor", "Fair", "Good", "Very Good", "Exceptional 🌟"],
-    placeholder: "Type your response...",
+    options: (type === 'single' || type === 'multi') ? options.map((opt, i) => ({ id: `opt_${Date.now()}_${i}`, text: opt })) : [],
+    labels: ["Çok Kötü", "Gelişmeli", "İyi", "Çok İyi", "Harika 🌟"],
+    placeholder: "Cevabınızı yazın...",
     votes: {}
   };
 
@@ -335,7 +353,7 @@ newQuestionForm.addEventListener('submit', (e) => {
 
 // Reset Survey
 resetBtn.addEventListener('click', () => {
-  if (confirm('Are you sure you want to reset all responses for all questions?')) {
+  if (confirm('Tüm katılımcı oylarını sıfırlamak istediğinize emin misiniz?')) {
     survey.questions.forEach(q => q.votes = {});
     saveSurvey();
     broadcastState();
@@ -375,32 +393,32 @@ function renderSurvey() {
   const activeQ = survey.questions[survey.activeQuestionIndex];
   if (!activeQ) return;
 
-  qIndexTag.textContent = `Question ${survey.activeQuestionIndex + 1} of ${survey.questions.length}`;
-  qTypeTag.textContent = activeQ.type === 'single' ? 'Multiple Choice' : (activeQ.type === 'rating' ? 'Star Rating' : 'Live Word Stream');
-  qTitle.textContent = activeQ.title;
+  qIndexTag.textContent = `Soru ${survey.activeQuestionIndex + 1} / ${survey.questions.length}`;
+  qTypeTag.textContent = activeQ.type === 'single' ? 'Tek Seçim' : (activeQ.type === 'multi' ? 'Çoklu Seçim (Birden Fazla)' : 'Yıldız');
+  qTitle.innerHTML = activeQ.title + (activeQ.subtitle ? `<br><span style="font-size: 1.05rem; font-weight: 500; color: var(--secondary);">${activeQ.subtitle}</span>` : '');
 
   const totalVotes = Object.keys(activeQ.votes || {}).length;
   qVoteTotal.textContent = totalVotes;
 
   if (!survey.acceptingVotes) {
     lockStatusBadge.style.display = 'inline-flex';
-    toggleLockBtn.textContent = '🔓 Unlock Voting';
+    toggleLockBtn.textContent = '🔓 Oylamayı Aç';
   } else {
     lockStatusBadge.style.display = 'none';
-    toggleLockBtn.textContent = '🔒 Lock Voting';
+    toggleLockBtn.textContent = '🔒 Oylamayı Kilitle';
   }
 
   prevBtn.disabled = survey.activeQuestionIndex === 0;
   prevBtn.style.opacity = survey.activeQuestionIndex === 0 ? '0.4' : '1';
-  nextBtn.textContent = survey.activeQuestionIndex === survey.questions.length - 1 ? 'Survey Completed' : 'Next Question ▶';
+  nextBtn.textContent = survey.activeQuestionIndex === survey.questions.length - 1 ? 'Anket Tamamlandı' : 'Sonraki Soru ▶';
 
   const results = calculateResults(activeQ);
-  if (activeQ.type === 'single') renderSingle(results);
+  if (activeQ.type === 'single' || activeQ.type === 'multi') renderOptionsBreakdown(results);
   else if (activeQ.type === 'rating') renderRating(results);
   else if (activeQ.type === 'wordcloud') renderWordCloud(results);
 }
 
-function renderSingle(results) {
+function renderOptionsBreakdown(results) {
   const breakdown = results.breakdown || [];
   let maxCount = 0;
   breakdown.forEach(b => { if (b.count > maxCount) maxCount = b.count; });
@@ -411,7 +429,7 @@ function renderSingle(results) {
       <div class="result-content">
         <div class="option-label-text">${escapeHtml(item.text)}</div>
         <div class="option-stats">
-          <span class="option-count-badge">${item.count} ${item.count === 1 ? 'vote' : 'votes'}</span>
+          <span class="option-count-badge">${item.count} ${item.count === 1 ? 'oy' : 'oy'}</span>
           <span class="option-percentage">${item.percentage}%</span>
         </div>
       </div>
@@ -430,12 +448,12 @@ function renderRating(results) {
       <div class="rating-score-box">
         <div class="rating-big-number">${avg}</div>
         <div class="rating-stars-row">${stars}</div>
-        <div style="font-size: 0.85rem; color: var(--text-muted);">${results.totalVotes} total ratings</div>
+        <div style="font-size: 0.85rem; color: var(--text-muted);">${results.totalVotes} oy verildi</div>
       </div>
       <div class="rating-bars-list">
         ${breakdown.slice().reverse().map(item => `
           <div class="rating-bar-item">
-            <div class="rating-bar-label">${item.rating} Stars (${item.label})</div>
+            <div class="rating-bar-label">${item.rating} Yıldız</div>
             <div class="rating-track"><div class="rating-fill" style="width: ${item.percentage}%;"></div></div>
             <span style="font-size: 0.85rem; font-weight: 700; min-width: 40px; text-align: right;">${item.percentage}%</span>
             <span style="font-size: 0.78rem; color: var(--text-dim); min-width: 35px;">(${item.count})</span>
@@ -451,7 +469,7 @@ function renderWordCloud(results) {
   const entries = results.recentEntries || [];
 
   if (words.length === 0 && entries.length === 0) {
-    resultsContainer.innerHTML = `<div class="empty-state"><p>Waiting for participants to submit ideas and feedback...</p></div>`;
+    resultsContainer.innerHTML = `<div class="empty-state"><p>Katılımcıların cevap vermesi bekleniyor...</p></div>`;
     return;
   }
 
@@ -467,9 +485,9 @@ function renderWordCloud(results) {
 
   resultsContainer.innerHTML = `
     <div class="wordcloud-container">
-      <div class="words-cloud-pills">${wordsHtml || '<span>No words yet</span>'}</div>
+      <div class="words-cloud-pills">${wordsHtml || '<span>Henüz kelime yok</span>'}</div>
       <div>
-        <div class="live-feed-header">Recent Live Submissions</div>
+        <div class="live-feed-header">Son Gelen Cevaplar</div>
         <div class="live-text-stream" style="margin-top: 10px;">
           ${entries.map(e => `<div class="text-entry-card">“${escapeHtml(e.text)}”</div>`).join('')}
         </div>
@@ -546,7 +564,6 @@ function handleIncomingVote(data) {
 function broadcastState() {
   if (mqttClient && mqttClient.connected) {
     const payload = JSON.stringify(getSurveyPayload());
-    // Retain message so new participants receive current state immediately
     mqttClient.publish(TOPIC_STATE, payload, { retain: true, qos: 1 });
   }
 }

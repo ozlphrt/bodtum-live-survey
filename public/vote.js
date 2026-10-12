@@ -1,4 +1,4 @@
-// Mobile Participant Voting Client - 100% Serverless GitHub Pages Real-Time Engine
+// Mobile Participant Voting Client - BODTUM Yapay Zeka Canlı Anketi
 
 // Multi-Broker List with Automatic Fallback
 const BROKERS = [
@@ -20,7 +20,7 @@ if (!voterId) {
 // State
 let currentSurvey = null;
 let currentQuestionId = null;
-let selectedAnswer = null;
+let selectedAnswer = null; // String (for single) or Array (for multi)
 let hasVotedCurrent = false;
 
 // DOM Elements
@@ -52,7 +52,7 @@ function renderQuestion(state) {
   // Question changed
   if (currentQuestionId !== activeQ.id) {
     currentQuestionId = activeQ.id;
-    selectedAnswer = null;
+    selectedAnswer = activeQ.type === 'multi' ? [] : null;
     voterSubmitBtn.disabled = true;
 
     const storedVotes = JSON.parse(localStorage.getItem(`bodtum_votes_${roomId}`) || '{}');
@@ -64,7 +64,7 @@ function renderQuestion(state) {
     }
   }
 
-  voterProgressTag.textContent = `Question ${state.activeQuestionIndex + 1} of ${state.totalQuestions}`;
+  voterProgressTag.textContent = `Soru ${state.activeQuestionIndex + 1} / ${state.totalQuestions}`;
 
   if (hasVotedCurrent) {
     showVotedScreen(activeQ);
@@ -73,11 +73,17 @@ function renderQuestion(state) {
 
   activeQuestionView.style.display = 'block';
   votedFeedbackView.style.display = 'none';
-  voterQTitle.textContent = activeQ.title;
+  voterQTitle.innerHTML = activeQ.title + (activeQ.subtitle ? `<div class="voter-q-subtitle">${activeQ.subtitle}</div>` : '');
 
-  if (activeQ.type === 'single') renderSingleOptions(activeQ.options);
-  else if (activeQ.type === 'rating') renderRatingOptions(activeQ);
-  else if (activeQ.type === 'wordcloud') renderTextInput(activeQ);
+  if (activeQ.type === 'single') {
+    renderSingleOptions(activeQ.options);
+  } else if (activeQ.type === 'multi') {
+    renderMultiOptions(activeQ.options);
+  } else if (activeQ.type === 'rating') {
+    renderRatingOptions(activeQ);
+  } else if (activeQ.type === 'wordcloud') {
+    renderTextInput(activeQ);
+  }
 }
 
 // Single Choice Options
@@ -110,9 +116,45 @@ function renderSingleOptions(options) {
   });
 }
 
+// Multi Choice Options (Birden fazla seçilebilir)
+function renderMultiOptions(options) {
+  if (!Array.isArray(selectedAnswer)) selectedAnswer = [];
+
+  let html = '<div class="options-grid">';
+  options.forEach(opt => {
+    const isSelected = selectedAnswer.includes(opt.id);
+    html += `
+      <button type="button" class="option-btn ${isSelected ? 'selected' : ''}" data-id="${opt.id}">
+        <span>${escapeHtml(opt.text)}</span>
+        <div class="option-check">${isSelected ? '✓' : ''}</div>
+      </button>
+    `;
+  });
+  html += '</div>';
+  voterInputArea.innerHTML = html;
+
+  const buttons = voterInputArea.querySelectorAll('.option-btn');
+  buttons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const optId = btn.getAttribute('data-id');
+      const idx = selectedAnswer.indexOf(optId);
+      if (idx > -1) {
+        selectedAnswer.splice(idx, 1);
+        btn.classList.remove('selected');
+        btn.querySelector('.option-check').textContent = '';
+      } else {
+        selectedAnswer.push(optId);
+        btn.classList.add('selected');
+        btn.querySelector('.option-check').textContent = '✓';
+      }
+      voterSubmitBtn.disabled = selectedAnswer.length === 0;
+    });
+  });
+}
+
 // Rating Options
 function renderRatingOptions(q) {
-  const labels = q.labels || ["Poor", "Fair", "Good", "Very Good", "Exceptional 🌟"];
+  const labels = q.labels || ["Çok Kötü", "Gelişmeli", "İyi", "Çok İyi", "Harika 🌟"];
   let html = '<div class="rating-row-interactive">';
   for (let i = 1; i <= 5; i++) {
     html += `
@@ -122,7 +164,7 @@ function renderRatingOptions(q) {
       </button>
     `;
   }
-  html += '</div><div class="rating-label-hint" id="ratingHint">Tap a star to rate</div>';
+  html += '</div><div class="rating-label-hint" id="ratingHint">Puanlamak için bir yıldıza dokunun</div>';
   voterInputArea.innerHTML = html;
 
   const starButtons = voterInputArea.querySelectorAll('.star-btn');
@@ -137,7 +179,7 @@ function renderRatingOptions(q) {
         if (bVal <= val) b.classList.add('active');
         else b.classList.remove('active');
       });
-      ratingHint.textContent = `${val} Star${val > 1 ? 's' : ''} - ${labels[val - 1]}`;
+      ratingHint.textContent = `${val} Yıldız - ${labels[val - 1]}`;
       voterSubmitBtn.disabled = false;
     });
   });
@@ -148,7 +190,7 @@ function renderTextInput(q) {
   voterInputArea.innerHTML = `
     <div class="word-input-container">
       <input type="text" id="voterTextInput" class="text-input-field" 
-        placeholder="${escapeHtml(q.placeholder || 'Type your response here...')}" 
+        placeholder="${escapeHtml(q.placeholder || 'Cevabınızı buraya yazın...')}" 
         maxlength="100" autocomplete="off" />
       <div style="font-size: 0.8rem; color: var(--text-dim); text-align: right;" id="charCount">0/100</div>
     </div>
@@ -174,9 +216,10 @@ function renderTextInput(q) {
 // Submit Vote
 function submitVote() {
   if (!selectedAnswer || !currentQuestionId) return;
+  if (Array.isArray(selectedAnswer) && selectedAnswer.length === 0) return;
 
   voterSubmitBtn.disabled = true;
-  voterSubmitBtn.textContent = 'Submitting...';
+  voterSubmitBtn.textContent = 'Gönderiliyor...';
 
   // Save vote locally
   const storedVotes = JSON.parse(localStorage.getItem(`bodtum_votes_${roomId}`) || '{}');
@@ -187,7 +230,7 @@ function submitVote() {
   publishVote(currentQuestionId, selectedAnswer);
 
   hasVotedCurrent = true;
-  voterSubmitBtn.textContent = 'Submit Response 🚀';
+  voterSubmitBtn.textContent = 'Cevabı Gönder 🚀';
 
   if (currentSurvey && currentSurvey.activeQuestion) {
     showVotedScreen(currentSurvey.activeQuestion);
@@ -206,26 +249,29 @@ function showVotedScreen(q) {
 function renderMobileResults(q) {
   const results = q.results || {};
 
-  if (q.type === 'single') {
+  if (q.type === 'single' || q.type === 'multi') {
     const breakdown = results.breakdown || [];
-    voterLiveResults.innerHTML = breakdown.map(item => `
-      <div style="background: rgba(15,23,42,0.6); padding: 12px 14px; border-radius: 10px; margin-bottom: 8px; border: 1px solid ${selectedAnswer === item.id ? 'var(--secondary)' : 'var(--card-border)'};">
-        <div style="display: flex; justify-content: space-between; font-size: 0.92rem; font-weight: 600; margin-bottom: 6px;">
-          <span>${escapeHtml(item.text)} ${selectedAnswer === item.id ? '⭐ (Your pick)' : ''}</span>
-          <span style="color: var(--secondary);">${item.percentage}%</span>
+    voterLiveResults.innerHTML = breakdown.map(item => {
+      const isMyChoice = Array.isArray(selectedAnswer) ? selectedAnswer.includes(item.id) : selectedAnswer === item.id;
+      return `
+        <div style="background: rgba(15,23,42,0.6); padding: 12px 14px; border-radius: 10px; margin-bottom: 8px; border: 1px solid ${isMyChoice ? 'var(--secondary)' : 'var(--card-border)'};">
+          <div style="display: flex; justify-content: space-between; font-size: 0.92rem; font-weight: 600; margin-bottom: 6px;">
+            <span>${escapeHtml(item.text)} ${isMyChoice ? '⭐ (Seçiminiz)' : ''}</span>
+            <span style="color: var(--secondary);">${item.percentage}%</span>
+          </div>
+          <div style="height: 6px; background: rgba(255,255,255,0.1); border-radius: 999px; overflow: hidden;">
+            <div style="width: ${item.percentage}%; height: 100%; background: linear-gradient(90deg, var(--primary), var(--secondary)); border-radius: 999px;"></div>
+          </div>
         </div>
-        <div style="height: 6px; background: rgba(255,255,255,0.1); border-radius: 999px; overflow: hidden;">
-          <div style="width: ${item.percentage}%; height: 100%; background: linear-gradient(90deg, var(--primary), var(--secondary)); border-radius: 999px;"></div>
-        </div>
-      </div>
-    `).join('');
+      `;
+    }).join('');
   } else if (q.type === 'rating') {
     const avg = results.average || "0.0";
     voterLiveResults.innerHTML = `
       <div style="text-align: center; padding: 16px;">
         <div style="font-size: 2.8rem; font-weight: 800; color: var(--accent-amber);">${avg}</div>
-        <div style="font-size: 0.9rem; color: var(--text-muted);">Current audience rating average</div>
-        <div style="margin-top: 8px; font-size: 0.85rem; color: var(--text-dim);">Your rating: ${selectedAnswer} Stars</div>
+        <div style="font-size: 0.9rem; color: var(--text-muted);">Ortalama Değerlendirme</div>
+        <div style="margin-top: 8px; font-size: 0.85rem; color: var(--text-dim);">Sizin Puanınız: ${selectedAnswer} Yıldız</div>
       </div>
     `;
   } else if (q.type === 'wordcloud') {
@@ -234,7 +280,7 @@ function renderMobileResults(q) {
       ? `<div style="display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; padding: 10px 0;">
           ${words.map(w => `<span class="word-pill scale-1">${escapeHtml(w.word)} <span class="word-freq">${w.count}</span></span>`).join('')}
          </div>`
-      : '<div style="text-align: center; color: var(--text-dim); padding: 12px;">Responses are streaming in live on the main screen!</div>';
+      : '<div style="text-align: center; color: var(--text-dim); padding: 12px;">Cevaplar ana ekrana canlı olarak akmaktadır!</div>';
   }
 }
 
@@ -262,9 +308,8 @@ function connectRealtime(brokerIndex = 0) {
   });
 
   mqttClient.on('connect', () => {
-    voterProgressTag.textContent = '🟢 Connected Live';
+    voterProgressTag.textContent = '🟢 Canlı Bağlandı';
     mqttClient.subscribe(TOPIC_STATE);
-    // Announce join
     mqttClient.publish(TOPIC_JOIN, JSON.stringify({ voterId }));
   });
 

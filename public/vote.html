@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="tr">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Vote | BODTUM Live Survey</title>
+  <title>BODTUM Canlı Oylama</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -42,7 +42,7 @@
 
     .voter-brand {
       font-weight: 800;
-      font-size: 1.1rem;
+      font-size: 1.15rem;
       letter-spacing: 0.5px;
       background: linear-gradient(135deg, var(--primary), var(--secondary));
       -webkit-background-clip: text;
@@ -69,11 +69,18 @@
     }
 
     .voter-q-title {
-      font-size: 1.45rem;
+      font-size: 1.35rem;
       font-weight: 700;
       line-height: 1.35;
       color: #fff;
-      margin-bottom: 24px;
+      margin-bottom: 20px;
+    }
+
+    .voter-q-subtitle {
+      font-size: 0.88rem;
+      color: var(--secondary);
+      font-weight: 600;
+      margin-top: 4px;
     }
 
     /* Option Tap Buttons */
@@ -88,9 +95,9 @@
       background: rgba(255, 255, 255, 0.04);
       border: 1.5px solid var(--card-border);
       border-radius: var(--radius-md);
-      padding: 18px 20px;
+      padding: 16px 18px;
       color: var(--text-main);
-      font-size: 1.05rem;
+      font-size: 1.02rem;
       font-weight: 600;
       text-align: left;
       cursor: pointer;
@@ -128,12 +135,14 @@
       justify-content: center;
       flex-shrink: 0;
       transition: all 0.2s ease;
+      font-size: 0.85rem;
     }
 
     .option-btn.selected .option-check {
       background: var(--secondary);
       border-color: var(--secondary);
       color: #080c14;
+      font-weight: 800;
     }
 
     /* Rating Stars Buttons */
@@ -231,7 +240,7 @@
     }
 
     .voter-submit-btn:disabled {
-      opacity: 0.5;
+      opacity: 0.45;
       cursor: not-allowed;
       transform: none !important;
       box-shadow: none !important;
@@ -298,21 +307,21 @@
   <div class="voter-container">
     <!-- Header -->
     <header class="voter-header" style="background: none; border-bottom: 1px solid var(--card-border); padding: 0 0 16px 0;">
-      <div class="voter-brand">BODTUM Live Poll</div>
-      <div class="voter-progress" id="voterProgressTag">Connecting...</div>
+      <div class="voter-brand">BODTUM Canlı Anket</div>
+      <div class="voter-progress" id="voterProgressTag">Bağlanıyor...</div>
     </header>
 
     <!-- Question View (When answering) -->
     <div id="activeQuestionView">
       <div class="vote-question-card">
-        <h2 class="voter-q-title" id="voterQTitle">Loading current question...</h2>
+        <h2 class="voter-q-title" id="voterQTitle">Soru yükleniyor...</h2>
         <div id="voterInputArea">
-          <!-- Dynamically injected choices or inputs -->
+          <!-- Dynamically injected choices -->
         </div>
       </div>
 
       <button class="voter-submit-btn" id="voterSubmitBtn" disabled>
-        Submit Response 🚀
+        Cevabı Gönder 🚀
       </button>
     </div>
 
@@ -320,19 +329,19 @@
     <div id="votedFeedbackView" style="display: none;">
       <div class="voted-feedback-card">
         <div class="success-icon-badge">✓</div>
-        <h3 style="font-size: 1.4rem; font-weight: 700; color: #fff; margin-bottom: 6px;">Vote Recorded!</h3>
-        <p style="color: var(--text-muted); font-size: 0.95rem;">Thank you! Your response has been added to the live survey results.</p>
+        <h3 style="font-size: 1.4rem; font-weight: 700; color: #fff; margin-bottom: 6px;">Cevabınız Kaydedildi!</h3>
+        <p style="color: var(--text-muted); font-size: 0.95rem;">Teşekkürler! Oyunuz canlı sonuç ekranına anında eklendi.</p>
         
         <div class="waiting-bar">
           <div class="spinner"></div>
-          <span>Waiting for host to switch to the next question...</span>
+          <span>Sunucunun bir sonraki soruya geçmesi bekleniyor...</span>
         </div>
       </div>
 
       <!-- Live Results Preview on Phone -->
       <div class="vote-question-card">
         <div style="font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--secondary); margin-bottom: 14px;">
-          Live Crowd Results
+          📊 Canlı Katılımcı Dağılımı
         </div>
         <div id="voterLiveResults">
           <!-- Injected bar percentages -->
@@ -344,8 +353,8 @@
     <div id="lockedView" style="display: none;">
       <div class="vote-question-card" style="text-align: center; padding: 40px 20px;">
         <div style="font-size: 2.5rem; margin-bottom: 12px;">🔒</div>
-        <h3 style="font-size: 1.3rem; margin-bottom: 8px;">Voting is Currently Paused</h3>
-        <p style="color: var(--text-muted); font-size: 0.9rem;">The presenter has temporarily paused responses. Stay on this screen; it will resume automatically.</p>
+        <h3 style="font-size: 1.3rem; margin-bottom: 8px;">Oylama Şu Anda Duraklatıldı</h3>
+        <p style="color: var(--text-muted); font-size: 0.9rem;">Sunucu oylamayı geçici olarak kilitledi. Ekranı kapatmayın; açıldığında otomatik güncellenecektir.</p>
       </div>
     </div>
   </div>

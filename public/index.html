@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="tr">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BODTUM Live Survey & Real-Time Results</title>
+  <title>BODTUM Canlı Yapay Zeka Anketi</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -19,24 +19,24 @@
     <div class="brand">
       <div class="brand-badge">BODTUM</div>
       <div>
-        <div class="brand-title">Live Audience Poll & Survey</div>
-        <div class="brand-subtitle">Real-time instant results • Serverless GitHub Pages</div>
+        <div class="brand-title">Yapay Zeka Canlı Anketi</div>
+        <div class="brand-subtitle">Gerçek zamanlı anlık katılımcı sonuçları</div>
       </div>
     </div>
 
     <div class="header-status">
       <div class="badge" id="roomBadge" style="background: rgba(99, 102, 241, 0.15); border-color: rgba(99, 102, 241, 0.35);">
-        🔑 Room: <strong id="roomCodeText" style="color: #a5b4fc; margin-left: 4px;">...</strong>
+        🔑 Oda: <strong id="roomCodeText" style="color: #a5b4fc; margin-left: 4px;">...</strong>
       </div>
-      <div class="badge" id="participantBadge" title="Live connected participants">
+      <div class="badge" id="participantBadge" title="Bağlı canlı katılımcılar">
         <span class="status-dot"></span>
-        <span id="participantCount">0</span> participants connected
+        <span id="participantCount">0</span> katılımcı
       </div>
-      <button class="sound-toggle active" id="soundToggle" title="Toggle audio chime on votes">
-        🔔 Sound On
+      <button class="sound-toggle active" id="soundToggle" title="Oylar geldiğinde ses çal">
+        🔔 Ses Açık
       </button>
-      <button class="btn-secondary" id="fullscreenBtn" style="width: auto; padding: 7px 14px;" title="Toggle Fullscreen presentation">
-        ⛶ Fullscreen
+      <button class="btn-secondary" id="fullscreenBtn" style="width: auto; padding: 7px 14px;" title="Tam ekran sunum">
+        ⛶ Tam Ekran
       </button>
     </div>
   </header>
@@ -45,25 +45,25 @@
   <main class="presenter-layout">
     <!-- QR Code & Join Panel -->
     <aside class="join-card">
-      <div class="join-step-badge">Instant Join</div>
-      <h3>Scan to Vote</h3>
-      <p>Point your mobile camera to answer live. No app or registration required!</p>
+      <div class="join-step-badge">Hızlı Katılım</div>
+      <h3>Katılmak İçin Tara</h3>
+      <p>Telefonunuzun kamerası ile QR kodu okutun. Kayıt veya uygulama gerekmez!</p>
 
       <div class="qr-frame">
         <canvas id="qrCanvas" style="display: block; width: 210px; height: 210px; border-radius: 8px;"></canvas>
       </div>
 
       <div class="join-url-box">
-        <span class="join-url-text" id="joinUrlText">Generating join link...</span>
-        <button class="copy-btn" id="copyUrlBtn">Copy</button>
+        <span class="join-url-text" id="joinUrlText">Bağlantı oluşturuluyor...</span>
+        <button class="copy-btn" id="copyUrlBtn">Kopyala</button>
       </div>
 
       <div class="quick-tools">
         <button class="btn-secondary" id="openSimulatorBtn">
-          📱 Test in Mobile Simulator
+          📱 Mobil Önizleme (Simülatör)
         </button>
         <button class="btn-secondary" id="openTabBtn">
-          ↗ Open Voter View in Tab
+          ↗ Oylama Ekranını Aç
         </button>
       </div>
     </aside>
@@ -75,18 +75,18 @@
         <div class="stage-header">
           <div>
             <div class="question-meta">
-              <span class="question-index-tag" id="qIndexTag">Question 1 of 4</span>
-              <span class="question-type-tag" id="qTypeTag">Multiple Choice</span>
+              <span class="question-index-tag" id="qIndexTag">Soru 1 / 3</span>
+              <span class="question-type-tag" id="qTypeTag">Tek Seçim</span>
               <span class="badge" id="lockStatusBadge" style="display: none; background: rgba(239, 68, 68, 0.15); border-color: rgba(239, 68, 68, 0.4); color: #fca5a5;">
-                🔒 Voting Locked
+                🔒 Oylama Duraklatıldı
               </span>
             </div>
-            <h1 class="question-title" id="qTitle">Loading live survey...</h1>
+            <h1 class="question-title" id="qTitle">Anket yükleniyor...</h1>
           </div>
 
           <div class="live-votes-badge">
             <span class="votes-count-number" id="qVoteTotal">0</span>
-            <span class="votes-count-label">Responses</span>
+            <span class="votes-count-label">Cevap</span>
           </div>
         </div>
 
@@ -96,7 +96,7 @@
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
             </svg>
-            <p>Waiting for participants to submit their responses...</p>
+            <p>Katılımcıların cevap vermesi bekleniyor...</p>
           </div>
         </div>
       </div>
@@ -105,22 +105,22 @@
       <footer class="presenter-toolbar">
         <div class="nav-controls">
           <button class="btn-secondary" id="prevBtn" style="width: auto;">
-            ◀ Previous
+            ◀ Önceki Soru
           </button>
           <button class="btn-primary" id="nextBtn">
-            Next Question ▶
+            Sonraki Soru ▶
           </button>
         </div>
 
         <div class="tool-group">
           <button class="btn-secondary" id="toggleLockBtn" style="width: auto;">
-            🔒 Lock Voting
+            🔒 Oylamayı Kilitle
           </button>
           <button class="btn-secondary" id="addQuestionBtn" style="width: auto;">
-            ➕ Add Question
+            ➕ Yeni Soru Ekle
           </button>
           <button class="btn-danger" id="resetBtn">
-            ↺ Reset Results
+            ↺ Sonuçları Sıfırla
           </button>
         </div>
       </footer>
@@ -130,7 +130,7 @@
   <!-- Mobile Phone Simulator Drawer -->
   <div class="simulator-drawer hidden" id="simulatorDrawer">
     <div class="simulator-header">
-      <span class="simulator-title">📱 Live Mobile Phone Preview</span>
+      <span class="simulator-title">📱 Canlı Katılımcı Önizlemesi</span>
       <button class="simulator-close" id="closeSimulatorBtn">&times;</button>
     </div>
     <iframe class="simulator-frame" id="simulatorFrame" src="./vote.html"></iframe>
@@ -138,30 +138,31 @@
 
   <!-- Add Question Modal -->
   <dialog id="questionModal" style="background: #111827; color: #fff; border: 1px solid rgba(255,255,255,0.15); border-radius: 18px; padding: 28px; width: 90%; max-width: 520px; margin: auto; backdrop-filter: blur(25px); box-shadow: 0 25px 50px rgba(0,0,0,0.8);">
-    <h3 style="margin-bottom: 16px; font-size: 1.4rem;">Add New Poll Question</h3>
+    <h3 style="margin-bottom: 16px; font-size: 1.4rem;">Yeni Soru Ekle</h3>
     <form id="newQuestionForm" method="dialog" style="display: flex; flex-direction: column; gap: 14px;">
       <div>
-        <label style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px;">Question Title</label>
-        <input type="text" id="modalQTitle" required placeholder="e.g. What topics should we cover next?" style="width: 100%; padding: 10px 14px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; color: #fff; font-size: 0.95rem;">
+        <label style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px;">Soru Başlığı</label>
+        <input type="text" id="modalQTitle" required placeholder="Örn: Yapay zekayı en çok nerede faydalı buluyorsunuz?" style="width: 100%; padding: 10px 14px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; color: #fff; font-size: 0.95rem;">
       </div>
 
       <div>
-        <label style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px;">Question Type</label>
+        <label style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px;">Soru Tipi</label>
         <select id="modalQType" style="width: 100%; padding: 10px 14px; background: #1e293b; border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; color: #fff; font-size: 0.95rem;">
-          <option value="single">Multiple Choice Poll</option>
-          <option value="rating">1 - 5 Star Rating</option>
-          <option value="wordcloud">Open Text / Word Cloud</option>
+          <option value="single">Tek Seçimli Anket</option>
+          <option value="multi">Çoklu Seçim (Birden fazla seçilebilir)</option>
+          <option value="rating">1 - 5 Yıldız Değerlendirme</option>
+          <option value="wordcloud">Açık Uçlu / Kelime Bulutu</option>
         </select>
       </div>
 
       <div id="modalOptionsGroup">
-        <label style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px;">Choices (One per line)</label>
-        <textarea id="modalQOptions" rows="4" placeholder="Option 1&#10;Option 2&#10;Option 3" style="width: 100%; padding: 10px 14px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; color: #fff; font-size: 0.95rem; resize: vertical;"></textarea>
+        <label style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px;">Seçenekler (Her satıra bir seçenek)</label>
+        <textarea id="modalQOptions" rows="4" placeholder="Seçenek 1&#10;Seçenek 2&#10;Seçenek 3" style="width: 100%; padding: 10px 14px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; color: #fff; font-size: 0.95rem; resize: vertical;"></textarea>
       </div>
 
       <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
-        <button type="button" id="modalCancelBtn" class="btn-secondary" style="width: auto;">Cancel</button>
-        <button type="submit" class="btn-primary">Create Question</button>
+        <button type="button" id="modalCancelBtn" class="btn-secondary" style="width: auto;">İptal</button>
+        <button type="submit" class="btn-primary">Soruyu Ekle</button>
       </div>
     </form>
   </dialog>

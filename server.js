@@ -33,50 +33,49 @@ function getLocalIp() {
 
 // In-Memory Survey State
 let survey = {
-  title: "BODTUM Live Usage & Experience Survey",
-  description: "Scan the QR code on your mobile device to participate in real time!",
+  title: "BODTUM Yapay Zeka Canlı Anketi",
+  description: "Telefonunuzla QR kodu tarayarak anında katılın!",
   activeQuestionIndex: 0,
   acceptingVotes: true,
   questions: [
     {
       id: "q1",
-      type: "single", // single choice
-      title: "How often do you engage with BODTUM platforms & services?",
+      type: "single",
+      title: "Yapay zekayı ne sıklıkla kullanıyorsunuz?",
       options: [
-        { id: "opt1", text: "🚀 Daily - It's part of my routine" },
-        { id: "opt2", text: "📅 Weekly - Several times a week" },
-        { id: "opt3", text: "☕ Monthly - When specific needs arise" },
-        { id: "opt4", text: "✨ First time / Just exploring today" }
+        { id: "opt1_1", text: "Hiç kullanmadım" },
+        { id: "opt1_2", text: "Birkaç kez denedim" },
+        { id: "opt1_3", text: "Ara sıra kullanıyorum" },
+        { id: "opt1_4", text: "Hemen hemen her gün" }
       ],
-      votes: {} // voterId -> optionId
+      votes: {}
     },
     {
       id: "q2",
-      type: "single",
-      title: "Which core service or capability do you find most valuable?",
+      type: "multi",
+      title: "Yapay zekayı hangi amaçlarla kullanıyorsunuz?",
+      subtitle: "(Birden fazla seçenek seçilebilir)",
       options: [
-        { id: "opt1", text: "🤝 Community Network & Peer Collaboration" },
-        { id: "opt2", text: "💡 Knowledge Base, Guides & Docs" },
-        { id: "opt3", text: "⚡ Rapid Response Tools & Automations" },
-        { id: "opt4", text: "🎓 Workshops, Events & Mentorship" }
+        { id: "opt2_1", text: "🔍 Araştırma ve bilgi edinme" },
+        { id: "opt2_2", text: "✍️ Yazı yazma, çeviri ve özetleme" },
+        { id: "opt2_3", text: "🎨 Fotoğraf, görsel veya müzik üretimi" },
+        { id: "opt2_4", text: "💻 Kod yazma veya uygulama geliştirme" },
+        { id: "opt2_5", text: "📅 Planlama ve günlük işler" },
+        { id: "opt2_6", text: "🚫 Henüz kullanmıyorum" }
       ],
       votes: {}
     },
     {
       id: "q3",
-      type: "rating", // 1 to 5 stars
-      title: "How would you rate your overall experience so far?",
-      min: 1,
-      max: 5,
-      labels: ["Poor", "Fair", "Good", "Very Good", "Exceptional 🌟"],
-      votes: {} // voterId -> rating (number 1-5)
-    },
-    {
-      id: "q4",
-      type: "wordcloud", // open text / keywords
-      title: "In 1 to 3 words, what feature or improvement would you like next?",
-      placeholder: "e.g. mobile app, faster sync, dark theme...",
-      votes: {} // voterId -> text
+      type: "single",
+      title: "Bugün en çok neyi merak ediyorsunuz?",
+      options: [
+        { id: "opt3_1", text: "💡 Yapay zekayı günlük hayatımda nasıl kullanabilirim?" },
+        { id: "opt3_2", text: "🚀 Yapay zeka ile neler üretebilirim?" },
+        { id: "opt3_3", text: "⚙️ Yapay zeka nasıl çalışıyor?" },
+        { id: "opt3_4", text: "🛡️ Riskleri ve sınırları neler?" }
+      ],
+      votes: {}
     }
   ]
 };
@@ -89,11 +88,17 @@ function calculateResults(question) {
   if (!question) return null;
   const totalVotes = Object.keys(question.votes || {}).length;
 
-  if (question.type === 'single') {
+  if (question.type === 'single' || question.type === 'multi') {
     const counts = {};
     question.options.forEach(opt => counts[opt.id] = 0);
-    Object.values(question.votes).forEach(optId => {
-      if (counts[optId] !== undefined) counts[optId]++;
+    Object.values(question.votes).forEach(val => {
+      if (Array.isArray(val)) {
+        val.forEach(optId => {
+          if (counts[optId] !== undefined) counts[optId]++;
+        });
+      } else if (counts[val] !== undefined) {
+        counts[val]++;
+      }
     });
 
     const breakdown = question.options.map(opt => ({

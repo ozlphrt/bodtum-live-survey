@@ -282,112 +282,43 @@ function renderCurrentView(fromVoteSubmit = false) {
 
   // VIEW 1: All Questions Completed Screen
   if (viewingCompleted) {
-    activeQuestionView.style.display = 'none';
-    votedFeedbackView.style.display = 'none';
-    surveyCompletedView.style.display = 'block';
+    if (activeQuestionView) activeQuestionView.style.display = 'none';
+    if (votedFeedbackView) votedFeedbackView.style.display = 'none';
+    if (surveyCompletedView) surveyCompletedView.style.display = 'block';
     renderCompletedSummary(questions, storedVotes);
     return;
   }
 
-  surveyCompletedView.style.display = 'none';
+  if (surveyCompletedView) surveyCompletedView.style.display = 'none';
+  if (votedFeedbackView) votedFeedbackView.style.display = 'none';
 
   const q = questions[userQuestionIndex];
   if (!q) return;
 
   const hasAnswer = storedVotes[q.id] !== undefined;
 
-  // VIEW 2: Feedback & Live Results View
-  if (hasAnswer && !editingAnswer) {
-    activeQuestionView.style.display = 'none';
-    votedFeedbackView.style.display = 'block';
+  // Active Question View (Direct question view for both fresh & review states)
+  if (activeQuestionView) activeQuestionView.style.display = 'block';
 
-    if (fromVoteSubmit || justVoted) {
-      feedbackTitle.textContent = "Cevabınız Kaydedildi ✓";
-      feedbackSubtitle.textContent = "Oyunuz canlı sunum ekranına yansıtıldı.";
-    } else {
-      feedbackTitle.textContent = `Soru ${userQuestionIndex + 1} Yanıtlandı`;
-      feedbackSubtitle.textContent = "Bu soru için oyunuz kayıtlıdır. Aşağıdan canlı sonuçları inceleyebilirsiniz.";
-    }
-
-    // Configure Next Action Button
-    if (userQuestionIndex < questions.length - 1) {
-      feedbackNextActionBtn.textContent = `Sonraki Soruya Geç (Soru ${userQuestionIndex + 2}) →`;
-      feedbackNextActionBtn.style.background = '#3b82f6';
-      feedbackNextActionBtn.style.color = '#fff';
-      feedbackNextActionBtn.onclick = () => {
-        userQuestionIndex++;
-        editingAnswer = false;
-        justVoted = false;
-        renderCurrentView();
-      };
-    } else if (allAnswered) {
-      feedbackNextActionBtn.textContent = "Tüm Yanıtları Gör & Tamamla 🎉";
-      feedbackNextActionBtn.style.background = 'var(--status-green)';
-      feedbackNextActionBtn.style.color = '#fff';
-      feedbackNextActionBtn.onclick = () => {
-        viewingCompleted = true;
-        editingAnswer = false;
-        justVoted = false;
-        renderCurrentView();
-      };
-    } else {
-      const firstUnanswered = questions.findIndex(item => storedVotes[item.id] === undefined);
-      feedbackNextActionBtn.textContent = `Yanıtlanmamış Soruya Git (Soru ${firstUnanswered + 1}) →`;
-      feedbackNextActionBtn.style.background = '#3b82f6';
-      feedbackNextActionBtn.style.color = '#fff';
-      feedbackNextActionBtn.onclick = () => {
-        userQuestionIndex = firstUnanswered !== -1 ? firstUnanswered : 0;
-        editingAnswer = false;
-        justVoted = false;
-        renderCurrentView();
-      };
-    }
-
-    // Change Answer Button
-    feedbackChangeVoteBtn.onclick = () => {
-      editingAnswer = true;
-      justVoted = false;
-      renderCurrentView();
-    };
-
-    // Previous Question Button
-    if (userQuestionIndex > 0) {
-      feedbackPrevBtn.style.display = 'inline-flex';
-      feedbackPrevBtn.onclick = () => {
-        userQuestionIndex--;
-        editingAnswer = false;
-        justVoted = false;
-        renderCurrentView();
-      };
-    } else {
-      feedbackPrevBtn.style.display = 'none';
-    }
-
-    renderMobileResults(q, storedVotes[q.id]);
-    return;
-  }
-
-  // VIEW 3: Active Question View (Voting / Editing)
-  votedFeedbackView.style.display = 'none';
-  activeQuestionView.style.display = 'block';
-
-  voterQIndexTag.textContent = `Soru ${userQuestionIndex + 1} / ${questions.length}`;
+  if (voterQIndexTag) voterQIndexTag.textContent = `Soru ${userQuestionIndex + 1} / ${questions.length}`;
 
   // Stage sync indicator
-  if (currentSurvey.activeQuestionIndex === userQuestionIndex) {
-    onStageBadge.style.display = 'inline-flex';
-  } else {
-    onStageBadge.style.display = 'none';
+  if (onStageBadge) {
+    if (currentSurvey.activeQuestionIndex === userQuestionIndex) {
+      onStageBadge.style.display = 'inline-flex';
+    } else {
+      onStageBadge.style.display = 'none';
+    }
   }
 
-  voterQTitle.textContent = q.title;
+  if (voterQTitle) voterQTitle.textContent = q.title;
   if (voterQSubtitle) {
     voterQSubtitle.textContent = q.subtitle || '';
     voterQSubtitle.style.display = q.subtitle ? 'block' : 'none';
   }
 
-  // Set initial selected answer if editing or fresh
-  if (hasAnswer && editingAnswer) {
+  // Set initial selected answer if question already answered or fresh
+  if (hasAnswer) {
     selectedAnswer = Array.isArray(storedVotes[q.id]) 
       ? [...storedVotes[q.id]] 
       : storedVotes[q.id];
@@ -412,32 +343,23 @@ function renderCurrentView(fromVoteSubmit = false) {
     renderTextInput(q);
   }
 
-  // Nav buttons (Prev / Next question without voting)
+  // Nav buttons (Previous question only, if needed to go back)
   if (voterPrevBtn) {
-    voterPrevBtn.disabled = userQuestionIndex === 0;
-    voterPrevBtn.onclick = () => {
-      if (userQuestionIndex > 0) {
+    if (userQuestionIndex > 0) {
+      voterPrevBtn.style.display = 'inline-flex';
+      voterPrevBtn.onclick = () => {
         userQuestionIndex--;
         editingAnswer = false;
         justVoted = false;
         renderCurrentView();
-      }
-    };
+      };
+    } else {
+      voterPrevBtn.style.display = 'none';
+    }
   }
 
   if (voterNextBtn) {
-    voterNextBtn.disabled = userQuestionIndex === questions.length - 1 && !allAnswered;
-    voterNextBtn.onclick = () => {
-      if (userQuestionIndex < questions.length - 1) {
-        userQuestionIndex++;
-        editingAnswer = false;
-        justVoted = false;
-        renderCurrentView();
-      } else if (allAnswered) {
-        viewingCompleted = true;
-        renderCurrentView();
-      }
-    };
+    voterNextBtn.style.display = 'none';
   }
 }
 

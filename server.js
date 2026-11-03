@@ -14,7 +14,13 @@ const io = new Server(server, {
 const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'public'), {
+  setHeaders: (res, filePath) => {
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+  }
+}));
 
 // Helper to get local IPv4 address
 function getLocalIp() {
@@ -46,7 +52,7 @@ let survey = {
         { id: "opt1_1", text: "Gözlemciyim (Henüz aktif kullanmıyorum, gelişmeleri uzaktan izliyorum)" },
         { id: "opt1_2", text: "Meraklı Kaşif (Ara sıra arama, metin veya çeviri için deniyorum)" },
         { id: "opt1_3", text: "Düzenli Kullanıcı (Haftalık iş akışımın ve projelerimin doğal parçası)" },
-        { id: "opt1_4", text: "İleri Düzey Güç Kullanıcısı (Her gün işimin merkezinde, prompt ve özel araçlarla)" }
+        { id: "opt1_4", text: "İleri Düzey Yetkin Kullanıcı (Her gün işimin merkezinde, prompt ve özel araçlarla)" }
       ],
       votes: {}
     },

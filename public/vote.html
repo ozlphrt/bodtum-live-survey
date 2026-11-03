@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./style.css?v=11">
+  <link rel="stylesheet" href="./style.css?v=20261103_2">
   <style>
     /* Voter Screen Minimal Layout */
     .voter-container {
@@ -581,47 +581,15 @@
         Cevabı Gönder
       </button>
 
-      <!-- Navigation buttons between questions -->
-      <div class="voter-nav-row" id="voterNavRow" style="display: flex; justify-content: space-between; align-items: center; margin-top: 14px; gap: 10px;">
-        <button type="button" class="btn-nav-outline" id="voterPrevBtn">
-          ← Önceki Soru
-        </button>
-        <button type="button" class="btn-nav-outline" id="voterNextBtn">
-          Sonraki Soru →
+      <!-- Navigation button to previous question if needed -->
+      <div class="voter-nav-row" id="voterNavRow" style="display: flex; justify-content: flex-start; align-items: center; margin-top: 14px;">
+        <button type="button" class="btn-nav-outline" id="voterPrevBtn" style="display: none;">
+          ← Önceki Soruya Dön
         </button>
       </div>
     </div>
 
-    <!-- 4. Feedback View (After voting on a question or viewing results of an already voted question) -->
-    <div id="votedFeedbackView" style="display: none;">
-      <div class="success-box">
-        <div class="success-icon">✓</div>
-        <h3 style="font-size: 1.25rem; font-weight: 600; color: #fff; margin-bottom: 4px;" id="feedbackTitle">Cevabınız Kaydedildi</h3>
-        <p style="color: var(--text-secondary); font-size: 0.86rem;" id="feedbackSubtitle">Oyunuz canlı sunum ekranına yansıtıldı.</p>
-        
-        <!-- Next Question / Complete Survey Action Button -->
-        <button class="btn-submit" id="feedbackNextActionBtn" style="margin-top: 16px; background: #3b82f6; color: #fff;">
-          Sonraki Soruya Geç →
-        </button>
 
-        <div style="display: flex; gap: 10px; margin-top: 10px;">
-          <button type="button" class="btn-nav-outline" id="feedbackChangeVoteBtn">
-            Yanıtı Değiştir
-          </button>
-          <button type="button" class="btn-nav-outline" id="feedbackPrevBtn">
-            ← Önceki Soru
-          </button>
-        </div>
-      </div>
-
-      <!-- Live Crowd Breakdown -->
-      <div class="voter-card">
-        <div style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-tertiary); margin-bottom: 14px;">
-          Katılımcı Dağılımı (Canlı)
-        </div>
-        <div id="voterLiveResults"></div>
-      </div>
-    </div>
 
     <!-- 5. Survey Completed View -->
     <div id="surveyCompletedView" style="display: none;">
@@ -655,6 +623,6 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/mqtt@5.3.5/dist/mqtt.min.js"></script>
-  <script src="./vote.js?v=12"></script>
+  <script src="./vote.js?v=20261103_2"></script>
 </body>
 </html>

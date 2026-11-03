@@ -9,15 +9,15 @@
   <title>BODTÜM & ODTÜ | Canlı Yapay Zeka Anketi</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./style.css?v=10">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./style.css?v=29">
 </head>
-<body>
-  <!-- Quiet ambient gradient -->
+<body class="admin-app-body">
+  <!-- Subtle ambient backdrop -->
   <div class="ambient-subtle"></div>
 
-  <!-- Minimal Header -->
-  <header>
+  <!-- Executive Header with 3 Core Navigation Tabs -->
+  <header class="admin-header">
     <div class="brand-section">
       <div class="brand-logos">
         <img src="./odtu-logo.png" alt="ODTÜ" class="logo-odtu" title="Orta Doğu Teknik Üniversitesi">
@@ -25,65 +25,161 @@
         <img src="./bodtum-logo.png" alt="BODTÜM" class="logo-bodtum" title="Bodrum ODTÜ Mezunları Derneği">
       </div>
       <div class="brand-info">
-        <div class="brand-title">Yapay Zeka Canlı Anketi</div>
-        <div class="brand-subtitle">Bodrum ODTÜ Mezunları Derneği</div>
+        <div class="brand-title">ODTÜ & BODTÜM</div>
+        <div class="brand-subtitle">Yapay Zeka Kullanım Anketi</div>
       </div>
     </div>
 
+    <!-- 3 Core Navigation Tabs (a: QR, b: Stage, c: Insights) -->
+    <nav class="header-nav-tabs" id="adminNavTabs">
+      <button type="button" class="view-tab-btn" data-view="qr" id="tabBtnQr" title="Giriş ve QR Kod Katılım Ekranı (Kısayol: 1)">
+        <svg class="tab-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="7" height="7"></rect>
+          <rect x="14" y="3" width="7" height="7"></rect>
+          <rect x="14" y="14" width="7" height="7"></rect>
+          <rect x="3" y="14" width="7" height="7"></rect>
+        </svg>
+        <span class="tab-text">Katılım & QR</span>
+      </button>
+      <button type="button" class="view-tab-btn active" data-view="stage" id="tabBtnStage" title="Canlı Sorular ve Yanıt İzleme (Kısayol: 2)">
+        <svg class="tab-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="20" x2="18" y2="10"></line>
+          <line x1="12" y1="20" x2="12" y2="4"></line>
+          <line x1="6" y1="20" x2="6" y2="14"></line>
+        </svg>
+        <span class="tab-text">Canlı Sahne</span>
+        <span class="tab-badge" id="tabQuestionBadge">1/9</span>
+      </button>
+      <button type="button" class="view-tab-btn" data-view="insights" id="tabBtnInsights" title="Kapsamlı Çapraz Analiz ve Kitle Zekası (Kısayol: 3)">
+        <svg class="tab-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+        </svg>
+        <span class="tab-text">Analiz & Rapor</span>
+      </button>
+    </nav>
+
+    <!-- Header Actions Right -->
     <div class="header-actions">
-      <div class="pill">
-        <span>Oda:</span>
-        <strong id="roomCodeText">...</strong>
+      <!-- Minimalist Live Audience Indicator -->
+      <div class="live-counter-pill" title="Canlı Bağlı Katılımcı">
+        <span class="live-pulse-dot"></span>
+        <strong id="participantCount">0</strong>
+        <span class="live-counter-label">Katılımcı</span>
       </div>
-      <div class="pill">
-        <span class="indicator-dot"></span>
-        <span id="participantCount">0</span> Katılımcı
+
+      <!-- Demo Simulation Button (Subtle, elegant, executive) -->
+      <button type="button" class="btn-demo-header" id="autoPopulateBtn" title="15 Mezun Yanıtı Simüle Et">
+        <svg class="btn-action-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 5v14M5 12h14"></path>
+        </svg>
+        <span>+15 Demo</span>
+      </button>
+
+      <!-- Global Reset Button (Always Visible on All Pages) -->
+      <button type="button" class="btn-reset-header" id="globalResetBtn" title="Tüm Oyları Sıfırla (Bütün Sayfalarda Geçerli)">
+        <svg class="btn-action-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="1 4 1 10 7 10"></polyline>
+          <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+        </svg>
+        <span>Sıfırla</span>
+      </button>
+
+      <!-- Utility Button Group -->
+      <div class="header-util-group">
+        <span class="room-code-badge" title="Oturum Kodu">
+          <span id="roomCodeText">...</span>
+        </span>
+        <button type="button" class="btn-icon-util" id="openSimulatorBtn" title="Mobil Katılımcı Simülatörü">
+          <svg class="util-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+            <line x1="12" y1="18" x2="12.01" y2="18"></line>
+          </svg>
+        </button>
+        <button type="button" class="btn-icon-util active" id="soundToggle" title="Ses Bildirimi">
+          <svg class="util-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+            <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+          </svg>
+        </button>
+        <button type="button" class="btn-icon-util" id="fullscreenBtn" title="Tam Ekran (F11)">
+          <svg class="util-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
+          </svg>
+        </button>
       </div>
-      <button class="btn-ghost active" id="soundToggle" title="Oylar geldiğinde ses çal">
-        🔔 Ses Açık
-      </button>
-      <button class="btn-ghost" id="fullscreenBtn" title="Tam Ekran">
-        ⛶ Tam Ekran
-      </button>
     </div>
   </header>
 
-  <!-- Main Presenter View -->
-  <main class="main-wrapper">
-    <!-- Left: QR Code & Join Kiosk Card -->
-    <aside class="join-panel">
-      <div class="join-eyebrow">Canlı Oylama</div>
-      <h2 class="join-heading">Katılmak İçin Tara</h2>
-      <p class="join-desc">Telefonunuzun kamerası ile QR kodu okutun. Kayıt veya uygulama gerekmez.</p>
+  <!-- Main Viewport Container (100vh fit, zero outer scrollbars) -->
+  <main class="admin-viewport-container">
 
-      <div class="qr-container">
-        <div id="qrcodeBox" style="width: 180px; height: 180px; display: flex; align-items: center; justify-content: center;">
-          <!-- Vector SVG QR code injected here -->
+    <!-- PAGE A: QR Code & Join Screen (Spacious Keynote Stage Layout) -->
+    <section id="view-qr" class="admin-page-view">
+      <div class="qr-stage-layout">
+
+        <!-- Left: Hero QR Frame (High-Contrast, Ultra-Large & Instantly Scannable) -->
+        <div class="qr-hero-column">
+          <div class="qr-hero-card">
+            <div id="qrcodeBox" class="qr-svg-holder">
+              <!-- QR Code SVG injected dynamically -->
+            </div>
+          </div>
+
+          <!-- Subtle Presenter/Manual Link Row -->
+          <div class="qr-alt-link-bar">
+            <span class="qr-alt-label">Doğrudan Link:</span>
+            <span class="qr-url-text" id="joinUrlText">Bağlantı hazırlanıyor...</span>
+            <button type="button" class="btn-qr-icon" id="copyUrlBtn" title="Bağlantıyı Kopyala">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            </button>
+            <button type="button" class="btn-qr-icon" id="openTabBtn" title="Yeni Sekmede Aç">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+            </button>
+          </div>
         </div>
-      </div>
 
-      <div class="link-row">
-        <span class="link-text" id="joinUrlText">Bağlantı hazırlanıyor...</span>
-        <button class="btn-copy" id="copyUrlBtn">Kopyala</button>
-      </div>
+        <!-- Right: Executive Welcome, Frictionless Steps & Live Audience Count -->
+        <div class="qr-content-column">
+          <div class="qr-brand-badge">BODTÜM & ODTÜ MEZUNLARI DERNEĞİ</div>
+          <h1 class="qr-main-title">Yapay Zeka Anketi</h1>
+          <p class="qr-cta-line">Telefonunuzla <strong>QR kodu tarayın</strong>, 3 dakikada tamamlayın.</p>
 
-      <div class="panel-actions">
-        <button class="btn-panel" id="openSimulatorBtn">
-          📱 Mobil Önizleme
-        </button>
-        <button class="btn-panel" id="openTabBtn">
-          ↗ Ayrı Sekmede Aç
-        </button>
-      </div>
-    </aside>
+          <div class="qr-chips">
+            <div class="qr-chip">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path></svg>
+              <span>Uygulama yok</span>
+            </div>
+            <div class="qr-chip">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+              <span>Anonim</span>
+            </div>
+            <div class="qr-chip">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+              <span>Sonuçlar canlı ekranda</span>
+            </div>
+          </div>
 
-    <!-- Right: Stage Area -->
-    <section class="stage-area">
-      <div class="stage-card">
-        <div class="stage-header">
-          <div>
+          <!-- Bottom: Live Attendance & Launch Action -->
+          <div class="qr-footer-actions">
+            <div class="qr-live-status-pill">
+              <span class="pulse-green-dot"></span>
+              <span class="qr-live-pre">Şu anda</span><strong class="qr-live-num" id="qrParticipantCount">0</strong><span class="qr-live-post">mezun cevapladı</span>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- PAGE B: Live Question Monitor / Stage Area (100% Viewport Fit) -->
+    <section id="view-stage" class="admin-page-view active">
+      <div class="stage-full-wrapper">
+        <!-- Stage Top Bar: Question Info & Stats -->
+        <div class="stage-header-bar">
+          <div class="stage-info-group">
             <div class="stage-eyebrows">
-              <span class="tag-counter" id="qIndexTag">Soru 1 / 3</span>
+              <span class="tag-counter" id="qIndexTag">Soru 1 / 9</span>
               <span class="tag-type" id="qTypeTag">Tek Seçim</span>
               <span class="tag-locked" id="lockStatusBadge" style="display: none;">🔒 Oylama Duraklatıldı</span>
             </div>
@@ -91,50 +187,102 @@
             <div class="stage-subtitle" id="qSubtitle"></div>
           </div>
 
-          <div class="vote-stat">
-            <span class="vote-number" id="qVoteTotal">0</span>
-            <span class="vote-label">Cevap</span>
+          <div class="stage-stat-pill">
+            <div class="vote-number" id="qVoteTotal">0</div>
+            <div class="vote-label">Oy / Cevap</div>
           </div>
         </div>
 
-        <!-- Dynamic Results List -->
-        <div class="options-list" id="resultsContainer">
+        <!-- Stage Middle: Dynamic Answers Container -->
+        <div class="stage-content-area" id="resultsContainer">
           <div class="empty-box">
             <p>Katılımcıların cevap vermesi bekleniyor...</p>
           </div>
         </div>
+
+        <!-- Stage Bottom: Integrated Presenter Control Bar -->
+        <footer class="stage-bottom-bar">
+          <div class="bar-left-controls">
+            <button type="button" class="btn-stage-nav" id="prevBtn" title="Önceki Soru (Sol Ok)">
+              <svg class="nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
+              <span>Önceki</span>
+              <span class="keycap">←</span>
+            </button>
+
+            <!-- Quick Question Stepper Pills -->
+            <div class="question-stepper-pills" id="questionStepperPills">
+              <!-- Injected dynamically: [1] [2] [3] ... [9] -->
+            </div>
+
+            <button type="button" class="btn-stage-nav primary" id="nextBtn" title="Sonraki Soru (Sağ Ok)">
+              <span>Sonraki</span>
+              <svg class="nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+              <span class="keycap">→</span>
+            </button>
+          </div>
+
+          <div class="bar-right-controls">
+            <button type="button" class="btn-stage-action" id="toggleLockBtn" title="Oylamayı Duraklat / Aç (L)">
+              <svg class="action-mini-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+              <span id="toggleLockText">Kilitle</span>
+              <span class="keycap">L</span>
+            </button>
+            <button type="button" class="btn-stage-action" id="addQuestionBtn">
+              <svg class="action-mini-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+              <span>Yeni Soru</span>
+            </button>
+            <button type="button" class="btn-stage-action danger" id="resetBtn" title="Oyları Sıfırla">
+              <svg class="action-mini-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>
+              <span>Sıfırla</span>
+            </button>
+            <button type="button" class="btn-stage-action highlight" id="stageGoToInsightsBtn" title="Sonuçları ve Kitle Zekasını Gör (3. Sayfa)">
+              <svg class="action-mini-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+              <span>Analiz & Rapor</span>
+            </button>
+          </div>
+        </footer>
       </div>
-
-      <!-- Presenter Toolbar -->
-      <footer class="toolbar">
-        <div class="toolbar-group">
-          <button class="btn-secondary" id="prevBtn">
-            ◀ Önceki Soru <span class="keycap">←</span>
-          </button>
-          <button class="btn-primary" id="nextBtn">
-            Sonraki Soru ▶ <span class="keycap">→</span>
-          </button>
-        </div>
-
-        <div class="toolbar-group">
-          <button class="btn-secondary" id="toggleLockBtn">
-            🔒 Oylamayı Kilitle <span class="keycap">L</span>
-          </button>
-          <button class="btn-secondary" id="addQuestionBtn">
-            ➕ Soru Ekle
-          </button>
-          <button class="btn-danger" id="resetBtn">
-            ↺ Sıfırla
-          </button>
-        </div>
-      </footer>
     </section>
+
+    <!-- PAGE C: Survey Insights & Cross-Pollination Cockpit (100% Viewport Fit) -->
+    <section id="view-insights" class="admin-page-view">
+      <div class="insights-page-wrapper">
+        <!-- Insights Subnav Header -->
+        <div class="insights-subnav">
+          <div class="insights-subnav-left">
+            <div class="subnav-title">BODTÜM Kitle Zekası & Çapraz Analiz Kokpiti</div>
+            <div class="subnav-desc">ODTÜ Mezunlar Derneği Bodrum — Karar Verici Dinamikleri & Stratejik Radar</div>
+          </div>
+
+          <div class="insights-subnav-actions">
+            <button type="button" id="insightsQuickPopulateBtn" class="btn-secondary" style="background: rgba(255, 255, 255, 0.06); border-color: rgba(255, 255, 255, 0.14); color: #e2e8f0; font-size: 0.8rem; font-weight: 600; padding: 6px 13px; border-radius: 8px;">
+              <svg class="action-mini-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"></path></svg>
+              <span>+15 Demo Yanıt</span>
+            </button>
+            <button type="button" id="copyInsightsMarkdownBtn" class="btn-secondary" style="background: rgba(200, 16, 46, 0.15); border-color: rgba(200, 16, 46, 0.35); color: #fca5a5; font-size: 0.8rem; font-weight: 600; padding: 6px 13px; border-radius: 8px;" title="Yönetici Raporunu PDF Olarak İndir / Yazdır">
+              <svg class="action-mini-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+              <span>PDF Raporu İndir</span>
+            </button>
+            <button type="button" id="insightsBackToStageBtn" class="btn-secondary" style="font-size: 0.8rem; font-weight: 500; padding: 6px 13px; border-radius: 8px;">
+              <svg class="action-mini-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
+              <span>Sahneye Dön</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Scrollable Dashboard Body (Inner Custom Scrollbar, Never Window Scrollbar) -->
+        <div class="insights-scroll-content" id="insightsFullPageBody">
+          <!-- Injected dynamically -->
+        </div>
+      </div>
+    </section>
+
   </main>
 
   <!-- Mobile Phone Simulator Drawer -->
   <div class="sim-drawer hidden" id="simulatorDrawer">
     <div class="sim-header">
-      <span class="sim-title">📱 Mobil Katılımcı Ekranı</span>
+      <span class="sim-title">Mobil Katılımcı Simülatörü</span>
       <button class="sim-close" id="closeSimulatorBtn">&times;</button>
     </div>
     <iframe class="sim-frame" id="simulatorFrame" src="./vote.html"></iframe>
@@ -172,6 +320,9 @@
   <!-- Local Self-Contained Vector QR Code Generator & Real-Time Sync -->
   <script src="./qrcode.js?v=5"></script>
   <script src="https://cdn.jsdelivr.net/npm/mqtt@5.3.5/dist/mqtt.min.js"></script>
-  <script src="./app.js?v=10"></script>
+  <script src="./html2pdf.bundle.min.js?v=2"></script>
+  <script src="./app.js?v=30"></script>
 </body>
 </html>
+
+

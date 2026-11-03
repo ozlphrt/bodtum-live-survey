@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./style.css?v=10">
+  <link rel="stylesheet" href="./style.css?v=11">
   <style>
     /* Voter Screen Minimal Layout */
     .voter-container {
@@ -330,6 +330,158 @@
     .btn-retry.checking .retry-icon {
       display: none;
     }
+
+    /* Stepper */
+    .question-stepper {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+
+    .step-chip {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      min-width: 40px;
+      height: 36px;
+      padding: 0 12px;
+      border-radius: 999px;
+      background: var(--surface-raised);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all var(--transition);
+      font-family: inherit;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .step-chip:hover {
+      border-color: var(--border-strong);
+      color: var(--text-primary);
+    }
+
+    .step-chip.active {
+      background: #ffffff;
+      color: #090b10;
+      border-color: #ffffff;
+      box-shadow: 0 2px 10px rgba(255, 255, 255, 0.15);
+    }
+
+    .step-chip.completed {
+      background: rgba(16, 185, 129, 0.12);
+      border-color: rgba(16, 185, 129, 0.35);
+      color: var(--status-green);
+    }
+
+    .step-chip.completed.active {
+      background: var(--status-green);
+      border-color: var(--status-green);
+      color: #ffffff;
+    }
+
+    .step-chip .step-check {
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+
+    .stage-pill {
+      font-size: 0.7rem;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: rgba(239, 68, 68, 0.15);
+      color: #f87171;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-weight: 600;
+    }
+
+    /* Summary list */
+    .summary-q-card {
+      background: var(--surface-raised);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      margin-bottom: 12px;
+      text-align: left;
+    }
+
+    .summary-q-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .summary-q-title {
+      font-size: 0.92rem;
+      font-weight: 600;
+      color: #fff;
+      line-height: 1.35;
+    }
+
+    .summary-q-choice {
+      font-size: 0.85rem;
+      color: #60a5fa;
+      margin-bottom: 10px;
+      font-weight: 500;
+    }
+
+    .btn-edit-sm {
+      padding: 5px 12px;
+      font-size: 0.76rem;
+      font-weight: 600;
+      background: var(--surface);
+      border: 1px solid var(--border-strong);
+      color: var(--text-primary);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all var(--transition);
+      white-space: nowrap;
+      font-family: inherit;
+    }
+
+    .btn-edit-sm:hover {
+      background: var(--surface-hover);
+      border-color: rgba(255, 255, 255, 0.3);
+    }
+
+    .btn-nav-outline {
+      flex: 1;
+      padding: 11px;
+      font-size: 0.88rem;
+      font-weight: 500;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: all var(--transition);
+      font-family: inherit;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .btn-nav-outline:hover:not(:disabled) {
+      background: var(--surface-raised);
+      color: var(--text-primary);
+      border-color: var(--border-strong);
+    }
+
+    .btn-nav-outline:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
   </style>
 </head>
 <body>
@@ -343,6 +495,11 @@
       </div>
       <div class="pill" id="voterProgressTag" style="padding: 4px 10px; font-size: 0.75rem;">Kontrol ediliyor...</div>
     </header>
+
+    <!-- Question Stepper Tabs -->
+    <div id="voterStepperContainer" style="display: none;">
+      <div id="questionStepper" class="question-stepper"></div>
+    </div>
 
     <!-- 1. Initial Quick Live Check View -->
     <div id="surveyLoadingView">
@@ -403,6 +560,10 @@
     <!-- 3. Active Question View -->
     <div id="activeQuestionView" style="display: none;">
       <div class="voter-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+          <span class="pill" id="voterQIndexTag" style="font-size: 0.75rem; padding: 2px 8px;">Soru 1 / 3</span>
+          <span id="onStageBadge" class="stage-pill" style="display: none;">● Sahnede</span>
+        </div>
         <h2 class="voter-title" id="voterQTitle">Soru yükleniyor...</h2>
         <div class="voter-sub" id="voterQSubtitle"></div>
         <div class="voter-options" id="voterInputArea">
@@ -413,30 +574,72 @@
       <button class="btn-submit" id="voterSubmitBtn" disabled>
         Cevabı Gönder
       </button>
+
+      <!-- Navigation buttons between questions -->
+      <div class="voter-nav-row" id="voterNavRow" style="display: flex; justify-content: space-between; align-items: center; margin-top: 14px; gap: 10px;">
+        <button type="button" class="btn-nav-outline" id="voterPrevBtn">
+          ← Önceki Soru
+        </button>
+        <button type="button" class="btn-nav-outline" id="voterNextBtn">
+          Sonraki Soru →
+        </button>
+      </div>
     </div>
 
-    <!-- 4. Feedback View (After voting) -->
+    <!-- 4. Feedback View (After voting on a question or viewing results of an already voted question) -->
     <div id="votedFeedbackView" style="display: none;">
       <div class="success-box">
         <div class="success-icon">✓</div>
-        <h3 style="font-size: 1.25rem; font-weight: 600; color: #fff; margin-bottom: 4px;">Cevabınız Kaydedildi</h3>
-        <p style="color: var(--text-secondary); font-size: 0.86rem;">Oyunuz canlı sunum ekranına yansıtıldı.</p>
-        <div class="waiting-text">
-          <div class="spinner-sm"></div>
-          <span>Sonraki soru bekleniyor...</span>
+        <h3 style="font-size: 1.25rem; font-weight: 600; color: #fff; margin-bottom: 4px;" id="feedbackTitle">Cevabınız Kaydedildi</h3>
+        <p style="color: var(--text-secondary); font-size: 0.86rem;" id="feedbackSubtitle">Oyunuz canlı sunum ekranına yansıtıldı.</p>
+        
+        <!-- Next Question / Complete Survey Action Button -->
+        <button class="btn-submit" id="feedbackNextActionBtn" style="margin-top: 16px; background: #3b82f6; color: #fff;">
+          Sonraki Soruya Geç →
+        </button>
+
+        <div style="display: flex; gap: 10px; margin-top: 10px;">
+          <button type="button" class="btn-nav-outline" id="feedbackChangeVoteBtn">
+            Yanıtı Değiştir
+          </button>
+          <button type="button" class="btn-nav-outline" id="feedbackPrevBtn">
+            ← Önceki Soru
+          </button>
         </div>
       </div>
 
       <!-- Live Crowd Breakdown -->
       <div class="voter-card">
         <div style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-tertiary); margin-bottom: 14px;">
-          Katılımcı Dağılımı
+          Katılımcı Dağılımı (Canlı)
         </div>
         <div id="voterLiveResults"></div>
       </div>
     </div>
 
-    <!-- 5. Locked View -->
+    <!-- 5. Survey Completed View -->
+    <div id="surveyCompletedView" style="display: none;">
+      <div class="success-box" style="padding: 28px 20px;">
+        <div class="success-icon" style="background: rgba(16, 185, 129, 0.2); font-size: 1.6rem; color: var(--status-green);">🎉</div>
+        <h3 style="font-size: 1.35rem; font-weight: 700; color: #fff; margin-bottom: 6px;">Tebrikler! Anketi Tamamladınız</h3>
+        <p style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.4;">Tüm soruları başarıyla yanıtladınız. Değerli katkılarınız için teşekkür ederiz!</p>
+        <div style="margin-top: 14px; padding: 10px; background: var(--surface-raised); border-radius: var(--radius-md); font-size: 0.8rem; color: var(--text-tertiary);">
+          Canlı sunum ekranındaki genel sonuçları ve tartışmayı takip edebilirsiniz.
+        </div>
+      </div>
+
+      <div class="voter-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+          <span style="font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-tertiary);">
+            Yanıtlarınızın Özeti
+          </span>
+          <span style="font-size: 0.75rem; color: var(--status-green); font-weight: 600;">✓ Tüm Sorular Tamamlandı</span>
+        </div>
+        <div id="completedSummaryList"></div>
+      </div>
+    </div>
+
+    <!-- 6. Locked View -->
     <div id="lockedView" style="display: none;">
       <div class="voter-card" style="text-align: center; padding: 40px 20px;">
         <h3 style="font-size: 1.15rem; margin-bottom: 6px;">Oylama Duraklatıldı</h3>
@@ -446,6 +649,6 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/mqtt@5.3.5/dist/mqtt.min.js"></script>
-  <script src="./vote.js?v=10"></script>
+  <script src="./vote.js?v=11"></script>
 </body>
 </html>

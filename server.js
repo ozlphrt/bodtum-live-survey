@@ -31,9 +31,9 @@ function getLocalIp() {
   return 'localhost';
 }
 
-// In-Memory Survey State
+// In-Memory Survey State (9 Questions for BODTÜM Audience Profile)
 let survey = {
-  title: "BODTUM Yapay Zeka Canlı Anketi",
+  title: "BODTÜM & ODTÜ Yapay Zeka Kullanım ve Eğilim Anketi",
   description: "Telefonunuzla QR kodu tarayarak anında katılın!",
   activeQuestionIndex: 0,
   acceptingVotes: true,
@@ -41,39 +41,134 @@ let survey = {
     {
       id: "q1",
       type: "single",
-      title: "Yapay zekayı ne sıklıkla kullanıyorsunuz?",
+      title: "Yapay zekayı günlük veya profesyonel hayatınızda ne sıklıkla kullanıyorsunuz?",
       options: [
-        { id: "opt1_1", text: "Hiç kullanmadım" },
-        { id: "opt1_2", text: "Birkaç kez denedim" },
-        { id: "opt1_3", text: "Ara sıra kullanıyorum" },
-        { id: "opt1_4", text: "Hemen hemen her gün" }
+        { id: "opt1_1", text: "Gözlemciyim (Henüz aktif kullanmıyorum, gelişmeleri uzaktan izliyorum)" },
+        { id: "opt1_2", text: "Meraklı Kaşif (Ara sıra arama, metin veya çeviri için deniyorum)" },
+        { id: "opt1_3", text: "Düzenli Kullanıcı (Haftalık iş akışımın ve projelerimin doğal parçası)" },
+        { id: "opt1_4", text: "İleri Düzey Güç Kullanıcısı (Her gün işimin merkezinde, prompt ve özel araçlarla)" }
       ],
       votes: {}
     },
     {
       id: "q2",
       type: "multi",
-      title: "Yapay zekayı hangi amaçlarla kullanıyorsunuz?",
-      subtitle: "(Birden fazla seçenek seçilebilir)",
+      title: "Şimdiye kadar hangi yapay zeka araçlarını deneyimlediniz?",
+      subtitle: "(Birden fazla seçebilirsiniz)",
       options: [
-        { id: "opt2_1", text: "🔍 Araştırma ve bilgi edinme" },
-        { id: "opt2_2", text: "✍️ Yazı yazma, çeviri ve özetleme" },
-        { id: "opt2_3", text: "🎨 Fotoğraf, görsel veya müzik üretimi" },
-        { id: "opt2_4", text: "💻 Kod yazma veya uygulama geliştirme" },
-        { id: "opt2_5", text: "📅 Planlama ve günlük işler" },
-        { id: "opt2_6", text: "🚫 Henüz kullanmıyorum" }
+        { id: "opt2_1", text: "Sohbet Modelleri (ChatGPT, Claude, Gemini)" },
+        { id: "opt2_2", text: "Akıllı Arama & Derin Araştırma (Perplexity, Genspark, NotebookLM)" },
+        { id: "opt2_3", text: "Görsel & Medya Üretimi (Midjourney, DALL-E, Suno)" },
+        { id: "opt2_4", text: "Kurumsal Ofis Asistanları (Microsoft Copilot, Notion AI)" },
+        { id: "opt2_5", text: "Yazılım, Kod & Veri Analitiği (Cursor, GitHub Copilot, Python/API)" },
+        { id: "opt2_6", text: "Henüz hiçbirini aktif olarak kullanmadım" }
       ],
       votes: {}
     },
     {
       id: "q3",
-      type: "single",
-      title: "Bugün en çok neyi merak ediyorsunuz?",
+      type: "multi",
+      title: "Yapay zekadan en çok hangi alanda somut fayda sağlıyorsunuz?",
+      subtitle: "(En çok 2 seçenek belirleyin)",
       options: [
-        { id: "opt3_1", text: "💡 Yapay zekayı günlük hayatımda nasıl kullanabilirim?" },
-        { id: "opt3_2", text: "🚀 Yapay zeka ile neler üretebilirim?" },
-        { id: "opt3_3", text: "⚙️ Yapay zeka nasıl çalışıyor?" },
-        { id: "opt3_4", text: "🛡️ Riskleri ve sınırları neler?" }
+        { id: "opt3_1", text: "Karmaşık belgeleri özetleme, hızlı öğrenme ve bilgi madenciliği" },
+        { id: "opt3_2", text: "Profesyonel yazışma, raporlama, konuşma metni veya yabancı dil çevirisi" },
+        { id: "opt3_3", text: "Stratejik karar alma, senaryo analizi ve beyin fırtınası partnerliği" },
+        { id: "opt3_4", text: "Rutin işleri hızlandırıp stratejik konulara zaman kazanma" },
+        { id: "opt3_5", text: "Henüz ölçülebilir somut bir fayda oluşturmadım" }
+      ],
+      votes: {}
+    },
+    {
+      id: "q4",
+      type: "scale",
+      title: "Yapay zeka insanlığın geleceği için: Tehdit mi, Fırsat mı?",
+      subtitle: "(1: Varoluşsal Tehdit — 3: Nasıl Kullandığımıza Bağlı — 5: Muazzam Fırsat)",
+      leftLabel: "Büyük Tehdit",
+      centerLabel: "Yönetişime Bağlı",
+      rightLabel: "Büyük Fırsat",
+      scaleLabels: [
+        "1 - Kesinlikle Tehdit (İşsizlik, manipülasyon ve varoluşsal riskler)",
+        "2 - Risk ve Tehditler Ağır Basıyor",
+        "3 - Dengede (Fırsat da risk de insanlığın yönetimine bağlı)",
+        "4 - Fırsatlar ve Potansiyel Ağır Basıyor",
+        "5 - Kesinlikle Büyük Fırsat (Yeni bir aydınlanma ve refah çağı)"
+      ],
+      votes: {}
+    },
+    {
+      id: "q5",
+      type: "scale",
+      title: "Yeni nesil ve eğitim: Çocuklarımız ve gençler için ne ifade ediyor?",
+      subtitle: "(1: Bilişsel Kaygı & Hazırcılık — 3: Dengeli Dönüşüm — 5: Büyük Potansiyel Sıçraması)",
+      leftLabel: "Derin Kaygı",
+      centerLabel: "Dengeli Dönüşüm",
+      rightLabel: "Büyük Sıçrama",
+      scaleLabels: [
+        "1 - Derin Kaygı (Hazırcılık, eleştirel düşünme kaybı ve istihdam endişesi)",
+        "2 - Kaygılar Ağır Basıyor",
+        "3 - Dengeli Dönüşüm (Ezber biter, yeni beceriler ve eleştirel muhakeme öne çıkar)",
+        "4 - Fırsatlar Ağır Basıyor",
+        "5 - Büyük Sıçrama (Tarihin en üretken ve donanımlı kuşağı yetişecek)"
+      ],
+      votes: {}
+    },
+    {
+      id: "q6",
+      type: "scale",
+      title: "Türkiye'deki kurumlar ve liderler yapay zeka çağına ne kadar hazır?",
+      subtitle: "(1: Çok Hazırlıksız & Fırsatlar Kaçıyor — 3: Merak Var Ama Strateji Yok — 5: Vizyoner & Çevik)",
+      leftLabel: "Çok Hazırlıksız",
+      centerLabel: "Arafta / Stratejisiz",
+      rightLabel: "Çevik & Öncü",
+      scaleLabels: [
+        "1 - Çok Hazırlıksız (Fırsatlar kaçıyor, yönetimsel vizyon eksik)",
+        "2 - Oldukça Geride Kalıyoruz",
+        "3 - Arafta (Yoğun ilgi var fakat somut kurumsal strateji yok)",
+        "4 - Ciddi Adımlar ve İlerlemeler Var",
+        "5 - Çevik ve Hazır (Dönüşüme cesaretle liderlik ediliyor)"
+      ],
+      votes: {}
+    },
+    {
+      id: "q7",
+      type: "scale",
+      title: "Zihinsel bağımsızlık: Yapay zeka insan aklını köreltir mi, güçlendirir mi?",
+      subtitle: "(1: Düşünsel Körelme — 3: Dengeli Araç — 5: Entelektüel Sıçrama)",
+      leftLabel: "Düşünsel Körelme",
+      centerLabel: "Dengeli Araç",
+      rightLabel: "Zihinsel Büyüme",
+      scaleLabels: [
+        "1 - Düşünsel Körelme (Derin muhakeme ve analitik düşünce zayıflar)",
+        "2 - Zihinsel Tembellik Riski Ağır Basıyor",
+        "3 - Dengeli Araç (Kullanıcının zihinsel disiplinine bağlı)",
+        "4 - Zihinsel Üretkenliği Artırır",
+        "5 - Entelektüel Sıçrama (Rutin kalkar, yaratıcı derinlik artar)"
+      ],
+      votes: {}
+    },
+    {
+      id: "q8",
+      type: "single",
+      title: "Yapay zekaya temkinli yaklaşmanıza veya mesafeli durmanıza en çok ne sebep oluyor?",
+      options: [
+        { id: "opt8_1", text: "Veri gizliliği, kurumsal güvenlik ve telif/hukuk belirsizlikleri" },
+        { id: "opt8_2", text: "Halüsinasyon (yanıltıcı yanıt) ve doğruluk teyidi zorluğu" },
+        { id: "opt8_3", text: "Kendi uzmanlık alanıma ve günlük işime nasıl entegre edeceğimi bilememek" },
+        { id: "opt8_4", text: "Hızla değişen yenilikleri takip etmeye yeterli zaman bulamamak" },
+        { id: "opt8_5", text: "Mesafe koymuyorum; hayatımın ve işimin ayrılmaz bir parçası" }
+      ],
+      votes: {}
+    },
+    {
+      id: "q9",
+      type: "single",
+      title: "Bugünkü ODTÜ / BODTÜM buluşmasından en çok hangi kazanımla ayrılmak istersiniz?",
+      options: [
+        { id: "opt9_1", text: "Hemen yarın kendi işimde uygulayabileceğim somut taktik ve yöntemler" },
+        { id: "opt9_2", text: "Geleceğin meslekleri, yatırımlar ve stratejik eğilimlere dair büyük resim" },
+        { id: "opt9_3", text: "Büyük dil modellerinin (LLM) gerçekte nasıl çalıştığı ve sınırları" },
+        { id: "opt9_4", text: "Etik, denetim, toplum ve insanlığın geleceğine dair felsefi tartışma" }
       ],
       votes: {}
     }
@@ -109,6 +204,43 @@ function calculateResults(question) {
     }));
 
     return { totalVotes, breakdown };
+  }
+
+  if (question.type === 'scale') {
+    const counts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+    let sum = 0;
+    Object.values(question.votes || {}).forEach(val => {
+      const num = parseInt(val, 10);
+      if (counts[num] !== undefined) {
+        counts[num]++;
+        sum += num;
+      }
+    });
+
+    const average = totalVotes > 0 ? (sum / totalVotes).toFixed(1) : "0.0";
+    const labels = question.scaleLabels || [
+      "1 - Kesinlikle Tehdit",
+      "2 - Tehdit Ağırlıklı",
+      "3 - Kullanım Amacına Bağlı",
+      "4 - Fırsat Ağırlıklı",
+      "5 - Kesinlikle Büyük Fırsat"
+    ];
+
+    const breakdown = [1, 2, 3, 4, 5].map(val => ({
+      value: val,
+      label: labels[val - 1] || `${val}`,
+      count: counts[val],
+      percentage: totalVotes > 0 ? Math.round((counts[val] / totalVotes) * 100) : 0
+    }));
+
+    return {
+      totalVotes,
+      average,
+      breakdown,
+      leftLabel: question.leftLabel || '',
+      centerLabel: question.centerLabel || '',
+      rightLabel: question.rightLabel || ''
+    };
   }
 
   if (question.type === 'rating') {
@@ -175,6 +307,17 @@ function getFullSurveyPayload() {
       votesCount: Object.keys(activeQ.votes || {}).length,
       results: calculateResults(activeQ)
     } : null,
+    questions: survey.questions.map(q => ({
+      id: q.id,
+      type: q.type,
+      title: q.title,
+      subtitle: q.subtitle,
+      options: q.options,
+      labels: q.labels,
+      placeholder: q.placeholder,
+      votesCount: Object.keys(q.votes || {}).length,
+      results: calculateResults(q)
+    })),
     questionsSummary: survey.questions.map((q, idx) => ({
       index: idx,
       id: q.id,

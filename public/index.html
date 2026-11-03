@@ -27,7 +27,7 @@
 
     <!-- 3 Core Navigation Tabs (a: QR, b: Stage, c: Insights) -->
     <nav class="header-nav-tabs" id="adminNavTabs">
-      <button type="button" class="view-tab-btn" data-view="qr" id="tabBtnQr" title="Giriş ve QR Kod Katılım Ekranı (Kısayol: 1)">
+      <button type="button" class="view-tab-btn active" data-view="qr" id="tabBtnQr" title="Giriş ve QR Kod Katılım Ekranı (Kısayol: 1)">
         <svg class="tab-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <rect x="3" y="3" width="7" height="7"></rect>
           <rect x="14" y="3" width="7" height="7"></rect>
@@ -36,7 +36,7 @@
         </svg>
         <span class="tab-text">Katılım & QR</span>
       </button>
-      <button type="button" class="view-tab-btn active" data-view="stage" id="tabBtnStage" title="Canlı Sorular ve Yanıt İzleme (Kısayol: 2)">
+      <button type="button" class="view-tab-btn" data-view="stage" id="tabBtnStage" title="Canlı Sorular ve Yanıt İzleme (Kısayol: 2)">
         <svg class="tab-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <line x1="18" y1="20" x2="18" y2="10"></line>
           <line x1="12" y1="20" x2="12" y2="4"></line>
@@ -85,7 +85,7 @@
   <main class="admin-viewport-container">
 
     <!-- PAGE A: QR Code & Join Screen (Spacious Keynote Stage Layout) -->
-    <section id="view-qr" class="admin-page-view">
+    <section id="view-qr" class="admin-page-view active">
       <div class="qr-stage-layout">
 
         <!-- Left: Hero QR Frame (High-Contrast, Ultra-Large & Instantly Scannable) -->
@@ -145,7 +145,7 @@
     </section>
 
     <!-- PAGE B: Live Question Monitor / Stage Area (100% Viewport Fit) -->
-    <section id="view-stage" class="admin-page-view active">
+    <section id="view-stage" class="admin-page-view">
       <div class="stage-full-wrapper">
         <!-- Stage Top Bar: Question Info & Stats -->
         <div class="stage-header-bar">
@@ -287,6 +287,26 @@
       </div>
     </form>
   </dialog>
+
+  <!-- In-App Executive Confirmation Modal -->
+  <div class="inapp-modal-overlay" id="inAppConfirmModal" style="display: none;">
+    <div class="inapp-modal-card">
+      <div class="inapp-modal-header">
+        <div class="inapp-modal-icon-badge" id="inAppModalIcon">⚠️</div>
+        <div class="inapp-modal-titles">
+          <div class="inapp-modal-badge-label" id="inAppModalBadge">DEMO & TEST VERİSİ</div>
+          <h3 class="inapp-modal-title" id="inAppModalTitle">Demo Yanıtlar Eklensin mi?</h3>
+        </div>
+      </div>
+      <div class="inapp-modal-body" id="inAppModalBody">
+        <!-- Content dynamically injected -->
+      </div>
+      <div class="inapp-modal-actions">
+        <button type="button" class="btn-inapp-cancel" id="inAppModalCancelBtn">Vazgeç</button>
+        <button type="button" class="btn-inapp-confirm" id="inAppModalConfirmBtn">Evet, Ekle</button>
+      </div>
+    </div>
+  </div>
 
   <!-- Local Self-Contained Vector QR Code Generator & Real-Time Sync -->
   <script src="./qrcode.js?v=5"></script>

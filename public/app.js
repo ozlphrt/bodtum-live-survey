@@ -84,7 +84,7 @@ class AudioNotifier {
 
       bodyOsc.start(now);
       bodyOsc.stop(now + 0.036);
-    } catch (e) {}
+    } catch (e) { }
   }
 }
 
@@ -249,7 +249,7 @@ try {
       survey = DEFAULT_SURVEY;
     }
   }
-} catch (e) {}
+} catch (e) { }
 
 // Ensure opt1_4 uses "İleri Düzey Uzman Kullanıcı"
 if (survey && survey.questions && survey.questions[0] && survey.questions[0].options) {
@@ -516,9 +516,9 @@ soundToggle.addEventListener('click', () => {
 // Fullscreen Toggle
 fullscreenBtn.addEventListener('click', () => {
   if (!document.fullscreenElement) {
-    document.documentElement.requestFullscreen().catch(() => {});
+    document.documentElement.requestFullscreen().catch(() => { });
   } else {
-    document.exitFullscreen().catch(() => {});
+    document.exitFullscreen().catch(() => { });
   }
 });
 
@@ -572,30 +572,119 @@ newQuestionForm.addEventListener('submit', (e) => {
   questionModal.close();
 });
 
+// Generic In-App Modal Dialog (Promise-based executive confirmation)
+function showInAppConfirm({
+  icon = '⚠️',
+  badge = 'UYARI',
+  title = 'Onay Gerekli',
+  bodyHtml = '',
+  confirmText = 'Onayla',
+  cancelText = 'Vazgeç',
+  isDanger = false
+} = {}) {
+  return new Promise((resolve) => {
+    const modal = document.getElementById('inAppConfirmModal');
+    const iconEl = document.getElementById('inAppModalIcon');
+    const badgeEl = document.getElementById('inAppModalBadge');
+    const titleEl = document.getElementById('inAppModalTitle');
+    const bodyEl = document.getElementById('inAppModalBody');
+    const cancelBtn = document.getElementById('inAppModalCancelBtn');
+    const confirmBtn = document.getElementById('inAppModalConfirmBtn');
+
+    if (!modal) {
+      resolve(confirm(title));
+      return;
+    }
+
+    iconEl.textContent = icon;
+    iconEl.className = `inapp-modal-icon-badge ${isDanger ? 'danger' : ''}`;
+    badgeEl.textContent = badge;
+    badgeEl.className = `inapp-modal-badge-label ${isDanger ? 'danger' : ''}`;
+    titleEl.textContent = title;
+    bodyEl.innerHTML = bodyHtml;
+    cancelBtn.textContent = cancelText;
+    confirmBtn.textContent = confirmText;
+    confirmBtn.className = `btn-inapp-confirm ${isDanger ? 'danger' : ''}`;
+
+    modal.style.display = 'flex';
+
+    function cleanup() {
+      modal.style.display = 'none';
+      cancelBtn.removeEventListener('click', onCancel);
+      confirmBtn.removeEventListener('click', onConfirm);
+      modal.removeEventListener('click', onBackdrop);
+      window.removeEventListener('keydown', onKeyDown);
+    }
+
+    function onCancel() {
+      cleanup();
+      resolve(false);
+    }
+
+    function onConfirm() {
+      cleanup();
+      resolve(true);
+    }
+
+    function onBackdrop(e) {
+      if (e.target === modal) {
+        onCancel();
+      }
+    }
+
+    function onKeyDown(e) {
+      if (e.key === 'Escape') {
+        onCancel();
+      }
+    }
+
+    cancelBtn.addEventListener('click', onCancel);
+    confirmBtn.addEventListener('click', onConfirm);
+    modal.addEventListener('click', onBackdrop);
+    window.addEventListener('keydown', onKeyDown);
+  });
+}
+
 // Global Survey Reset Function (Accessible on All Pages)
-function executeSurveyReset() {
-  if (confirm('Tüm katılımcı oylarını ve katılımcı sayacını sıfırlamak istediğinize emin misiniz?')) {
-    survey.resetEpoch = Date.now();
-    survey.questions.forEach(q => q.votes = {});
-    survey.activeQuestionIndex = 0;
+async function executeSurveyReset() {
+  const confirmed = await showInAppConfirm({
+    icon: '🗑️',
+    badge: 'TÜM OYLARI SIFIRLAMA',
+    title: 'Tüm Oylar Sıfırlansın mı?',
+    bodyHtml: `
+      <p>Bu işlem geri alınamaz.</p>
+      <div class="inapp-modal-highlight danger">
+        Mevcut tüm <strong>katılımcı oyları, anket yanıtları ve katılımcı sayacı</strong> tamamen sıfırlanacaktır (0).
+      </div>
+      <p>Devam etmek istediğinize emin misiniz?</p>
+    `,
+    confirmText: 'Evet, Her Şeyi Sıfırla',
+    cancelText: 'Vazgeç',
+    isDanger: true
+  });
 
-    // Reset active participants / contributors / responders count to 0
-    activeParticipants.clear();
-    if (participantCount) participantCount.textContent = '0';
-    const qrPartCount = document.getElementById('qrParticipantCount');
-    if (qrPartCount) qrPartCount.textContent = '0';
+  if (!confirmed) return;
 
-    saveSurvey();
-    if (mqttClient && mqttClient.connected) {
-      mqttClient.publish(`bodtum/survey/${roomId}/reset`, JSON.stringify({ resetEpoch: survey.resetEpoch, roomId }), { qos: 1 });
-    }
-    broadcastState();
-    renderSurvey();
-    if (currentAdminView === 'insights') {
-      generateSurveyInsights();
-    }
-    showToast('Tüm oylar ve katılımcı sayısı sıfırlandı.');
+  survey.resetEpoch = Date.now();
+  survey.questions.forEach(q => q.votes = {});
+  survey.activeQuestionIndex = 0;
+
+  // Reset active participants / contributors / responders count to 0
+  activeParticipants.clear();
+  if (participantCount) participantCount.textContent = '0';
+  const qrPartCount = document.getElementById('qrParticipantCount');
+  if (qrPartCount) qrPartCount.textContent = '0';
+
+  saveSurvey();
+  if (mqttClient && mqttClient.connected) {
+    mqttClient.publish(`bodtum/survey/${roomId}/reset`, JSON.stringify({ resetEpoch: survey.resetEpoch, roomId }), { qos: 1 });
   }
+  broadcastState();
+  renderSurvey();
+  if (currentAdminView === 'insights') {
+    generateSurveyInsights();
+  }
+  showToast('Tüm oylar ve katılımcı sayısı sıfırlandı.');
 }
 
 if (resetBtn) resetBtn.addEventListener('click', executeSurveyReset);
@@ -637,14 +726,14 @@ function renderSurvey() {
   if (!activeQ) return;
 
   qIndexTag.textContent = `Soru ${survey.activeQuestionIndex + 1} / ${survey.questions.length}`;
-  qTypeTag.textContent = activeQ.type === 'single' 
-    ? 'Tek Seçim' 
-    : (activeQ.type === 'multi' 
-        ? 'Çoklu Seçim (Birden Fazla)' 
-        : (activeQ.type === 'scale' 
-            ? 'Doğrusal Ölçek (1-5 Spektrum)' 
-            : 'Değerlendirme'));
-  
+  qTypeTag.textContent = activeQ.type === 'single'
+    ? 'Tek Seçim'
+    : (activeQ.type === 'multi'
+      ? 'Çoklu Seçim (Birden Fazla)'
+      : (activeQ.type === 'scale'
+        ? 'Doğrusal Ölçek (1-5 Spektrum)'
+        : 'Değerlendirme'));
+
   qTitle.textContent = activeQ.title;
   const subEl = document.getElementById('qSubtitle');
   if (subEl) {
@@ -669,8 +758,8 @@ function renderSurvey() {
 
   prevBtn.disabled = survey.activeQuestionIndex === 0;
   prevBtn.style.opacity = survey.activeQuestionIndex === 0 ? '0.4' : '1';
-  nextBtn.innerHTML = survey.activeQuestionIndex === survey.questions.length - 1 
-    ? '<span>Tamamlandı</span>' 
+  nextBtn.innerHTML = survey.activeQuestionIndex === survey.questions.length - 1
+    ? '<span>Tamamlandı</span>'
     : '<span>Sonraki</span> <svg class="nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg> <span class="keycap" style="background: rgba(0,0,0,0.2); color:#fff;">→</span>';
 
   // Render Stepper Pills on Stage Bottom Bar
@@ -752,11 +841,11 @@ function renderScale(results, q) {
       <!-- Unified Option-Row Distribution Bars (100% Left-Aligned from X=0) -->
       <div class="scale-distribution-list">
         ${(() => {
-          let maxCount = 0;
-          breakdown.forEach(b => { if (b.count > maxCount) maxCount = b.count; });
-          return breakdown.map(item => {
-            const isLead = maxCount > 0 && item.count === maxCount && total > 1;
-            return `
+      let maxCount = 0;
+      breakdown.forEach(b => { if (b.count > maxCount) maxCount = b.count; });
+      return breakdown.map(item => {
+        const isLead = maxCount > 0 && item.count === maxCount && total > 1;
+        return `
               <div class="option-row ${isLead ? 'lead' : ''}">
                 <div class="option-bar-bg" style="width: ${item.percentage}%;"></div>
                 <div class="option-content">
@@ -771,8 +860,8 @@ function renderScale(results, q) {
                 </div>
               </div>
             `;
-          }).join('');
-        })()}
+      }).join('');
+    })()}
       </div>
     </div>
   `;
@@ -885,7 +974,7 @@ const TOPIC_PING = `bodtum/survey/${roomId}/ping`;
 function connectRealtime(brokerIndex = 0) {
   if (brokerIndex >= BROKERS.length) return;
   const url = BROKERS[brokerIndex];
-  
+
   mqttClient = mqtt.connect(url, {
     clientId: 'presenter_' + Math.random().toString(36).substring(2, 9),
     keepalive: 30,
@@ -1003,9 +1092,9 @@ window.addEventListener('keydown', (e) => {
   } else if (e.key.toLowerCase() === 'f') {
     e.preventDefault();
     if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().catch(() => {});
+      document.documentElement.requestFullscreen().catch(() => { });
     } else {
-      document.exitFullscreen().catch(() => {});
+      document.exitFullscreen().catch(() => { });
     }
   }
 });
@@ -1105,12 +1194,24 @@ function generateDiverseAlumniBatch(count = 15) {
   return batch;
 }
 
-function autoPopulateResponses(count = 15) {
-  const warningMsg = `⚠️ DİKKAT: Demo & Test Verisi Uyarısı\n\nBu işlem yalnızca test ve demo amaçlıdır.\n\nSisteme ${count} adet rastgele yanıt eklenecektir. Bu işlem gerçek katılımcıların yanıtlarını simülasyon verileriyle karıştıracak ve gerçek sonuçları kirletecektir.\n\nYine de demo verileri eklemek istiyor musunuz?`;
+async function autoPopulateResponses(count = 15) {
+  const confirmed = await showInAppConfirm({
+    icon: '⚠️',
+    badge: 'DEMO & TEST VERİSİ',
+    title: 'Demo Yanıtlar Eklensin mi?',
+    bodyHtml: `
+      <p>Bu işlem yalnızca test ve demo amaçlıdır.</p>
+      <div class="inapp-modal-highlight">
+        Sisteme <strong>${count} adet rastgele yanıt</strong> eklenecektir. Bu işlem gerçek katılımcıların yanıtlarını simülasyon verileriyle karıştıracak ve <strong>gerçek anket sonuçlarını kirletecektir</strong>.
+      </div>
+      <p>Yine de demo verileri eklemek istiyor musunuz?</p>
+    `,
+    confirmText: `Evet, ${count} Demo Yanıt Ekle`,
+    cancelText: 'Vazgeç',
+    isDanger: false
+  });
 
-  if (!confirm(warningMsg)) {
-    return;
-  }
+  if (!confirmed) return;
 
   const dynamicBatch = generateDiverseAlumniBatch(count);
 
@@ -1164,7 +1265,7 @@ function buildGaugeSvg(val, max, color, isPercent = false) {
 // ----------------------------------------------------
 function buildRadarChartSvg(q4, q5, q6, q7) {
   const cx = 200, cy = 200, maxR = 120;
-  
+
   // Scores 1-5 mapped to 0-120 px from center
   const r4 = Math.max(10, Math.min(maxR, (q4 / 5) * maxR)); // Top (Y-up)
   const r7 = Math.max(10, Math.min(maxR, (q7 / 5) * maxR)); // Right (X-right)
@@ -1372,7 +1473,7 @@ function generateSurveyInsights(cohortFilter = activeInsightsCohort) {
     const subset = allRespondents.filter(r => r.q1 === tier.id);
     const count = subset.length;
     const pct = totalAllVotes > 0 ? Math.round((count / totalAllVotes) * 100) : 0;
-    
+
     if (count === 0) {
       return {
         ...tier, count: 0, pct: 0, q4Avg: "-", q6Avg: "-", q7Avg: "-",
@@ -1516,10 +1617,10 @@ function generateSurveyInsights(cohortFilter = activeInsightsCohort) {
   const radarSvg = `<svg class="db-svg" viewBox="0 0 470 330">
     ${[1, 2, 3, 4, 5].map(l => `<polygon points="${rdAxes.map((_, i) => rdPoint(i, l).map(n => n.toFixed(1)).join(',')).join(' ')}" fill="none" stroke="rgba(255,255,255,${l === 5 ? 0.18 : 0.07})"/>`).join('')}
     ${rdAxes.map((ax, i) => {
-      const [x, y] = rdPoint(i, 5), [lx, ly] = rdPoint(i, 6.0);
-      const anchor = Math.abs(lx - rdCx) < 8 ? 'middle' : (lx > rdCx ? 'start' : 'end');
-      return `<line x1="${rdCx}" y1="${rdCy}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke="rgba(255,255,255,0.08)"/><text x="${lx.toFixed(1)}" y="${(ly + 4).toFixed(1)}" text-anchor="${anchor}">${ax.name}</text>`;
-    }).join('')}
+    const [x, y] = rdPoint(i, 5), [lx, ly] = rdPoint(i, 6.0);
+    const anchor = Math.abs(lx - rdCx) < 8 ? 'middle' : (lx > rdCx ? 'start' : 'end');
+    return `<line x1="${rdCx}" y1="${rdCy}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke="rgba(255,255,255,0.08)"/><text x="${lx.toFixed(1)}" y="${(ly + 4).toFixed(1)}" text-anchor="${anchor}">${ax.name}</text>`;
+  }).join('')}
     ${rdGroups.map(g => `<polygon points="${g.vals.map((v, i) => rdPoint(i, v).map(n => n.toFixed(1)).join(',')).join(' ')}" fill="${g.color}" fill-opacity="${g.fill}" stroke="${g.color}" stroke-width="2.2" stroke-linejoin="round"/>${g.vals.map((v, i) => { const [x, y] = rdPoint(i, v); return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3.5" fill="${g.color}"/>`; }).join('')}`).join('')}
   </svg>`;
   let rdInsightHtml = 'Karşılaştırma için hem uzman hem seyrek kullanıcı yanıtı gerekli.';
@@ -1582,14 +1683,14 @@ function generateSurveyInsights(cohortFilter = activeInsightsCohort) {
       <div class="db-mx-y">Zihinsel kaygı ↑</div>
       <div class="db-mx-grid">
         ${mxDefs.map(d => {
-          const share = activeCount ? mxCells[d.k] / activeCount : 0;
-          const lead = mxCells[d.k] === mxMax && mxMax > 0;
-          return `<div class="db-mx-cell ${lead ? 'lead' : ''}" style="background:${lead ? `rgba(200,16,46,${0.12 + share * 0.5})` : `rgba(255,255,255,${0.03 + share * 0.12})`}">
+    const share = activeCount ? mxCells[d.k] / activeCount : 0;
+    const lead = mxCells[d.k] === mxMax && mxMax > 0;
+    return `<div class="db-mx-cell ${lead ? 'lead' : ''}" style="background:${lead ? `rgba(200,16,46,${0.12 + share * 0.5})` : `rgba(255,255,255,${0.03 + share * 0.12})`}">
             <div class="db-mx-num">%${Math.round(share * 100)}</div>
             <div class="db-mx-name">${d.name}</div>
             <div class="db-mx-sub">${d.sub} · ${mxCells[d.k]} kişi</div>
           </div>`;
-        }).join('')}
+  }).join('')}
       </div>
       <div class="db-mx-x">Seyrek <span>← Kullanım sıklığı →</span> Düzenli</div>
     </div>`;
@@ -1621,11 +1722,11 @@ function generateSurveyInsights(cohortFilter = activeInsightsCohort) {
   const donutSvg = `<svg class="db-donut" viewBox="0 0 120 120">
     <circle cx="60" cy="60" r="44" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="18"/>
     ${dbArch.map(a => {
-      const len = totalAllVotes ? (a.count / totalAllVotes) * dnC : 0;
-      const seg = `<circle cx="60" cy="60" r="44" fill="none" stroke="${a.color}" stroke-width="18" stroke-dasharray="${len.toFixed(1)} ${(dnC - len).toFixed(1)}" stroke-dashoffset="${(-dnCum).toFixed(1)}" transform="rotate(-90 60 60)"/>`;
-      dnCum += len;
-      return seg;
-    }).join('')}
+    const len = totalAllVotes ? (a.count / totalAllVotes) * dnC : 0;
+    const seg = `<circle cx="60" cy="60" r="44" fill="none" stroke="${a.color}" stroke-width="18" stroke-dasharray="${len.toFixed(1)} ${(dnC - len).toFixed(1)}" stroke-dashoffset="${(-dnCum).toFixed(1)}" transform="rotate(-90 60 60)"/>`;
+    dnCum += len;
+    return seg;
+  }).join('')}
     <text x="60" y="58" text-anchor="middle" class="dn-n">${totalAllVotes}</text>
     <text x="60" y="73" text-anchor="middle" class="dn-l">katılımcı</text>
   </svg>`;
@@ -2073,7 +2174,7 @@ function openPrintWindowFallback(data) {
 // ----------------------------------------------------
 // 3-Page Executive View Navigation System
 // ----------------------------------------------------
-let currentAdminView = 'stage'; // 'qr' | 'stage' | 'insights'
+let currentAdminView = 'qr'; // 'qr' | 'stage' | 'insights'
 
 function switchAdminView(viewName) {
   currentAdminView = viewName;
@@ -2162,4 +2263,5 @@ window.addEventListener('keydown', (e) => {
 
 // Boot
 renderSurvey();
+switchAdminView('qr');
 connectRealtime();

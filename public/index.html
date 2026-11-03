@@ -19,11 +19,6 @@
   <!-- Executive Header with 3 Core Navigation Tabs -->
   <header class="admin-header">
     <div class="brand-section">
-      <div class="brand-logos">
-        <img src="./odtu-logo.png" alt="ODTÜ" class="logo-odtu" title="Orta Doğu Teknik Üniversitesi">
-        <div class="logo-sep"></div>
-        <img src="./bodtum-logo.png" alt="BODTÜM" class="logo-bodtum" title="Bodrum ODTÜ Mezunları Derneği">
-      </div>
       <div class="brand-info">
         <div class="brand-title">ODTÜ & BODTÜM</div>
         <div class="brand-subtitle">Yapay Zeka Kullanım Anketi</div>
@@ -60,30 +55,6 @@
 
     <!-- Header Actions Right -->
     <div class="header-actions">
-      <!-- Minimalist Live Audience Indicator -->
-      <div class="live-counter-pill" title="Canlı Bağlı Katılımcı">
-        <span class="live-pulse-dot"></span>
-        <strong id="participantCount">0</strong>
-        <span class="live-counter-label">Katılımcı</span>
-      </div>
-
-      <!-- Demo Simulation Button (Subtle, elegant, executive) -->
-      <button type="button" class="btn-demo-header" id="autoPopulateBtn" title="15 Mezun Yanıtı Simüle Et">
-        <svg class="btn-action-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 5v14M5 12h14"></path>
-        </svg>
-        <span>+15 Demo</span>
-      </button>
-
-      <!-- Global Reset Button (Always Visible on All Pages) -->
-      <button type="button" class="btn-reset-header" id="globalResetBtn" title="Tüm Oyları Sıfırla (Bütün Sayfalarda Geçerli)">
-        <svg class="btn-action-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="1 4 1 10 7 10"></polyline>
-          <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
-        </svg>
-        <span>Sıfırla</span>
-      </button>
-
       <!-- Utility Button Group -->
       <div class="header-util-group">
         <span class="room-code-badge" title="Oturum Kodu">
@@ -222,22 +193,21 @@
           </div>
 
           <div class="bar-right-controls">
-            <button type="button" class="btn-stage-action" id="toggleLockBtn" title="Oylamayı Duraklat / Aç (L)">
-              <svg class="action-mini-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-              <span id="toggleLockText">Kilitle</span>
-              <span class="keycap">L</span>
+            <div class="live-counter-pill icon-only" title="Canlı Bağlı Katılımcı">
+              <span class="live-pulse-dot"></span>
+              <strong id="participantCount">0</strong>
+            </div>
+            <button type="button" class="btn-icon-stage" id="autoPopulateBtn" title="+15 Demo Yanıt">
+              <svg class="action-mini-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
             </button>
-            <button type="button" class="btn-stage-action" id="addQuestionBtn">
-              <svg class="action-mini-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-              <span>Yeni Soru</span>
-            </button>
-            <button type="button" class="btn-stage-action danger" id="resetBtn" title="Oyları Sıfırla">
-              <svg class="action-mini-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>
-              <span>Sıfırla</span>
-            </button>
-            <button type="button" class="btn-stage-action highlight" id="stageGoToInsightsBtn" title="Sonuçları ve Kitle Zekasını Gör (3. Sayfa)">
-              <svg class="action-mini-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
-              <span>Analiz & Rapor</span>
+            <button type="button" class="btn-icon-stage danger" id="resetBtn" title="Tüm Oyları Sıfırla">
+              <svg class="action-mini-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="1 4 1 10 7 10"></polyline>
+                <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+              </svg>
             </button>
           </div>
         </footer>

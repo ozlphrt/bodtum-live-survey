@@ -892,6 +892,7 @@ header, .admin-header {
   justify-content: center;
   overflow: hidden; /* Kenarlarda ASLA scroll bar çıkmasın - auto scale */
   padding: 6px 0;
+  gap: clamp(8px, 1.3vh, 14px);
 }
 
 .stage-bottom-bar {
@@ -912,6 +913,43 @@ header, .admin-header {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.btn-icon-stage {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.btn-icon-stage:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
+  border-color: var(--border-strong);
+  transform: translateY(-1px);
+}
+
+.btn-icon-stage.danger {
+  color: #f87171;
+}
+
+.btn-icon-stage.danger:hover {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.35);
+  color: #fca5a5;
+}
+
+.live-counter-pill.icon-only {
+  padding: 6px 12px;
+  gap: 6px;
 }
 
 .question-stepper-pills {
@@ -1179,7 +1217,7 @@ header, .admin-header {
 .options-list {
   display: flex;
   flex-direction: column;
-  gap: clamp(6px, 1.2vh, 12px);
+  gap: clamp(8px, 1.3vh, 14px);
   flex: 1;
   justify-content: center;
 }
@@ -1189,7 +1227,7 @@ header, .admin-header {
   background: var(--surface-raised);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
-  padding: clamp(10px, 1.5vh, 18px) clamp(16px, 2vw, 24px);
+  padding: clamp(9px, 1.25vh, 16px) clamp(16px, 2vw, 24px);
   display: flex;
   align-items: center;
   justify-content: space-between;

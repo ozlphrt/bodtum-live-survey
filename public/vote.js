@@ -222,9 +222,8 @@ function renderStepper(questions, storedVotes) {
     if (isActive) classes.push('active');
 
     html += `
-      <button type="button" class="${classes.join(' ')}" data-index="${idx}">
-        ${isAnswered ? '<span class="step-check">✓</span>' : ''}
-        <span>Soru ${idx + 1}</span>
+      <button type="button" class="${classes.join(' ')}" data-index="${idx}" title="Soru ${idx + 1}" aria-label="Soru ${idx + 1}">
+        ${idx + 1}
       </button>
     `;
   });
@@ -232,8 +231,8 @@ function renderStepper(questions, storedVotes) {
   if (allAnswered) {
     const isSummaryActive = viewingCompleted;
     html += `
-      <button type="button" class="step-chip ${isSummaryActive ? 'active' : ''}" id="summaryTabBtn" style="border-style: dashed;">
-        <span>🎉 Özet</span>
+      <button type="button" class="step-chip ${isSummaryActive ? 'active' : ''}" id="summaryTabBtn" title="Özet" aria-label="Özet">
+        ✓
       </button>
     `;
   }

@@ -43,21 +43,47 @@ class AudioNotifier {
       if (!this.ctx) return;
       if (this.ctx.state === 'suspended') this.ctx.resume();
 
-      const osc = this.ctx.createOscillator();
-      const gain = this.ctx.createGain();
+      const now = this.ctx.currentTime;
 
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(659.25, this.ctx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(880.00, this.ctx.currentTime + 0.1);
+      // 1. Crisp Plastic Snap Transient (mechanical switch click)
+      const snapOsc = this.ctx.createOscillator();
+      const snapGain = this.ctx.createGain();
+      const snapFilter = this.ctx.createBiquadFilter();
 
-      gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.35);
+      snapFilter.type = 'bandpass';
+      snapFilter.frequency.setValueAtTime(2800, now);
+      snapFilter.Q.setValueAtTime(2.5, now);
 
-      osc.connect(gain);
-      gain.connect(this.ctx.destination);
+      snapOsc.type = 'triangle';
+      snapOsc.frequency.setValueAtTime(2400, now);
+      snapOsc.frequency.exponentialRampToValueAtTime(320, now + 0.025);
 
-      osc.start();
-      osc.stop(this.ctx.currentTime + 0.35);
+      snapGain.gain.setValueAtTime(0.35, now);
+      snapGain.gain.exponentialRampToValueAtTime(0.001, now + 0.025);
+
+      snapOsc.connect(snapFilter);
+      snapFilter.connect(snapGain);
+      snapGain.connect(this.ctx.destination);
+
+      snapOsc.start(now);
+      snapOsc.stop(now + 0.026);
+
+      // 2. Plastic Body Resonance ('thock')
+      const bodyOsc = this.ctx.createOscillator();
+      const bodyGain = this.ctx.createGain();
+
+      bodyOsc.type = 'sine';
+      bodyOsc.frequency.setValueAtTime(520, now);
+      bodyOsc.frequency.exponentialRampToValueAtTime(140, now + 0.035);
+
+      bodyGain.gain.setValueAtTime(0.25, now);
+      bodyGain.gain.exponentialRampToValueAtTime(0.001, now + 0.035);
+
+      bodyOsc.connect(bodyGain);
+      bodyGain.connect(this.ctx.destination);
+
+      bodyOsc.start(now);
+      bodyOsc.stop(now + 0.036);
     } catch (e) {}
   }
 }
@@ -517,7 +543,7 @@ modalQType.addEventListener('change', () => {
   modalOptionsGroup.style.display = (modalQType.value === 'single' || modalQType.value === 'multi') ? 'block' : 'none';
 });
 
-addQuestionBtn.addEventListener('click', () => questionModal.showModal());
+if (addQuestionBtn) addQuestionBtn.addEventListener('click', () => questionModal.showModal());
 modalCancelBtn.addEventListener('click', () => questionModal.close());
 
 newQuestionForm.addEventListener('submit', (e) => {
@@ -577,12 +603,14 @@ const globalResetBtn = document.getElementById('globalResetBtn');
 if (globalResetBtn) globalResetBtn.addEventListener('click', executeSurveyReset);
 
 // Lock Toggle
-toggleLockBtn.addEventListener('click', () => {
-  survey.acceptingVotes = !survey.acceptingVotes;
-  saveSurvey();
-  broadcastState();
-  renderSurvey();
-});
+if (toggleLockBtn) {
+  toggleLockBtn.addEventListener('click', () => {
+    survey.acceptingVotes = !survey.acceptingVotes;
+    saveSurvey();
+    broadcastState();
+    renderSurvey();
+  });
+}
 
 // Navigation
 prevBtn.addEventListener('click', () => {
@@ -627,12 +655,16 @@ function renderSurvey() {
   const totalVotes = Object.keys(activeQ.votes || {}).length;
   qVoteTotal.textContent = totalVotes;
 
-  if (!survey.acceptingVotes) {
-    lockStatusBadge.style.display = 'inline-block';
-    toggleLockBtn.innerHTML = '<svg class="action-mini-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 9.9-1"></path></svg><span>Oylamayı Aç</span> <span class="keycap">L</span>';
-  } else {
-    lockStatusBadge.style.display = 'none';
-    toggleLockBtn.innerHTML = '<svg class="action-mini-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg><span>Kilitle</span> <span class="keycap">L</span>';
+  if (toggleLockBtn) {
+    if (!survey.acceptingVotes) {
+      lockStatusBadge.style.display = 'inline-block';
+      toggleLockBtn.innerHTML = '<svg class="action-mini-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 9.9-1"></path></svg><span>Oylamayı Aç</span> <span class="keycap">L</span>';
+    } else {
+      lockStatusBadge.style.display = 'none';
+      toggleLockBtn.innerHTML = '<svg class="action-mini-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg><span>Kilitle</span> <span class="keycap">L</span>';
+    }
+  } else if (lockStatusBadge) {
+    lockStatusBadge.style.display = survey.acceptingVotes ? 'none' : 'inline-block';
   }
 
   prevBtn.disabled = survey.activeQuestionIndex === 0;
@@ -753,7 +785,7 @@ function renderOptionsBreakdown(results) {
   let maxCount = 0;
   breakdown.forEach(b => { if (b.count > maxCount) maxCount = b.count; });
 
-  resultsContainer.innerHTML = breakdown.map((item, idx) => {
+  const rows = breakdown.map((item, idx) => {
     const isLead = maxCount > 0 && item.count === maxCount;
     const letter = LETTERS[idx] || (idx + 1);
 
@@ -773,6 +805,8 @@ function renderOptionsBreakdown(results) {
       </div>
     `;
   }).join('');
+
+  resultsContainer.innerHTML = `<div class="options-list">${rows}</div>`;
 }
 
 function renderRating(results) {

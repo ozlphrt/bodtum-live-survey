@@ -52,7 +52,7 @@ let survey = {
         { id: "opt1_1", text: "Gözlemciyim (Henüz aktif kullanmıyorum, gelişmeleri uzaktan izliyorum)" },
         { id: "opt1_2", text: "Meraklı Kaşif (Ara sıra arama, metin veya çeviri için deniyorum)" },
         { id: "opt1_3", text: "Düzenli Kullanıcı (Haftalık iş akışımın ve projelerimin doğal parçası)" },
-        { id: "opt1_4", text: "İleri Düzey Yetkin Kullanıcı (Her gün işimin merkezinde, prompt ve özel araçlarla)" }
+        { id: "opt1_4", text: "İleri Düzey Uzman Kullanıcı (Her gün işimin merkezinde, prompt ve özel araçlarla)" }
       ],
       votes: {}
     },

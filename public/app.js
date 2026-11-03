@@ -78,7 +78,7 @@ const DEFAULT_SURVEY = {
         { id: "opt1_1", text: "Gözlemciyim (Henüz aktif kullanmıyorum, gelişmeleri uzaktan izliyorum)" },
         { id: "opt1_2", text: "Meraklı Kaşif (Ara sıra arama, metin veya çeviri için deniyorum)" },
         { id: "opt1_3", text: "Düzenli Kullanıcı (Haftalık iş akışımın ve projelerimin doğal parçası)" },
-        { id: "opt1_4", text: "İleri Düzey Güç Kullanıcısı (Her gün işimin merkezinde, prompt ve özel araçlarla)" }
+        { id: "opt1_4", text: "İleri Düzey Uzman Kullanıcı (Her gün işimin merkezinde, prompt ve özel araçlarla)" }
       ],
       votes: {}
     },
@@ -224,6 +224,14 @@ try {
     }
   }
 } catch (e) {}
+
+// Ensure opt1_4 uses "İleri Düzey Uzman Kullanıcı"
+if (survey && survey.questions && survey.questions[0] && survey.questions[0].options) {
+  const opt1_4 = survey.questions[0].options.find(o => o.id === 'opt1_4');
+  if (opt1_4) {
+    opt1_4.text = "İleri Düzey Uzman Kullanıcı (Her gün işimin merkezinde, prompt ve özel araçlarla)";
+  }
+}
 
 if (!survey.resetEpoch) {
   survey.resetEpoch = Date.now();
@@ -1001,7 +1009,7 @@ function generateDiverseAlumniBatch(count = 15) {
   const archetypes = [
     // 1. Pragmatic Trailblazer / Tech & Startup Founder (~30%)
     () => ({
-      q1: "opt1_4", // İleri düzey güç kullanıcısı
+      q1: "opt1_4", // İleri düzey uzman kullanıcı
       q2: ["opt2_1", pick(["opt2_2", "opt2_5"]), pick(["opt2_3", "opt2_4", "opt2_5"])],
       q3: pickMultiple(["opt3_1", "opt3_3", "opt3_4"], 1, 2),
       q4: pick([4, 5, 5]), // Büyük fırsat
@@ -1314,7 +1322,7 @@ function generateSurveyInsights(cohortFilter = activeInsightsCohort) {
   // Cross-Pollination Finding 3: Cross-Tabulation Heatmap Matrix (Q1 x Boyutlar)
   // ----------------------------------------------------
   const adoptionTiers = [
-    { id: 'opt1_4', name: 'Güç Kullanıcısı', sub: 'Her Gün Aktif', color: '#a78bfa' },
+    { id: 'opt1_4', name: 'Uzman Kullanıcı', sub: 'Her Gün Aktif', color: '#a78bfa' },
     { id: 'opt1_3', name: 'Düzenli Profesyonel', sub: 'Haftada Birkaç', color: '#34d399' },
     { id: 'opt1_2', name: 'Meraklı Kaşif', sub: 'Ayda Birkaç Kez', color: '#60a5fa' },
     { id: 'opt1_1', name: 'Gözlemci', sub: 'Neredeyse Hiç', color: '#94a3b8' }
@@ -1447,7 +1455,7 @@ function generateSurveyInsights(cohortFilter = activeInsightsCohort) {
       ? 'Bireyler kurumlarının önünde. Sahnede araç ipuçlarından çok <b>kurumsal strateji ve yönetişim</b> anlatmak karşılık bulur.'
       : 'Birey ve kurum benzer hızda ilerliyor. Odak <b>ölçekleme ve iyi uygulama paylaşımı</b> olabilir.');
 
-  // ---- 2) Radar: yetkin vs seyrek kullanıcı ----
+  // ---- 2) Radar: uzman vs seyrek kullanıcı ----
   const rdAxes = [
     { name: 'Fırsat algısı', fn: r => r.q4 },
     { name: 'Eğitim & dönüşüm', fn: r => r.q5 },
@@ -1456,7 +1464,7 @@ function generateSurveyInsights(cohortFilter = activeInsightsCohort) {
     { name: 'Araç çeşitliliği', fn: r => Math.min(5, r.toolsCount) }
   ];
   const rdGroups = [
-    { name: 'Düzenli & yetkin', color: '#c8102e', fill: 0.22, list: allRespondents.filter(r => r.q1 === 'opt1_4' || r.q1 === 'opt1_3') },
+    { name: 'Düzenli & Uzman', color: '#c8102e', fill: 0.22, list: allRespondents.filter(r => r.q1 === 'opt1_4' || r.q1 === 'opt1_3') },
     { name: 'Gözlemci & seyrek', color: '#e2e8f0', fill: 0.12, list: allRespondents.filter(r => r.q1 === 'opt1_1' || r.q1 === 'opt1_2') }
   ].filter(g => g.list.length > 0);
   const rdCx = 235, rdCy = 165, rdR = 108;
@@ -1474,11 +1482,11 @@ function generateSurveyInsights(cohortFilter = activeInsightsCohort) {
     }).join('')}
     ${rdGroups.map(g => `<polygon points="${g.vals.map((v, i) => rdPoint(i, v).map(n => n.toFixed(1)).join(',')).join(' ')}" fill="${g.color}" fill-opacity="${g.fill}" stroke="${g.color}" stroke-width="2.2" stroke-linejoin="round"/>${g.vals.map((v, i) => { const [x, y] = rdPoint(i, v); return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3.5" fill="${g.color}"/>`; }).join('')}`).join('')}
   </svg>`;
-  let rdInsightHtml = 'Karşılaştırma için hem yetkin hem seyrek kullanıcı yanıtı gerekli.';
+  let rdInsightHtml = 'Karşılaştırma için hem uzman hem seyrek kullanıcı yanıtı gerekli.';
   if (rdGroups.length === 2) {
     let best = 0, bestDiff = -1;
     rdAxes.forEach((_, i) => { const d = Math.abs(rdGroups[0].vals[i] - rdGroups[1].vals[i]); if (d > bestDiff) { bestDiff = d; best = i; } });
-    rdInsightHtml = `En büyük ayrışma <b>${rdAxes[best].name}</b> ekseninde: yetkin kullanıcılar <b>${rdGroups[0].vals[best].toFixed(1)}</b>, seyrek kullanıcılar <b>${rdGroups[1].vals[best].toFixed(1)}</b>.`;
+    rdInsightHtml = `En büyük ayrışma <b>${rdAxes[best].name}</b> ekseninde: uzman kullanıcılar <b>${rdGroups[0].vals[best].toFixed(1)}</b>, seyrek kullanıcılar <b>${rdGroups[1].vals[best].toFixed(1)}</b>.`;
   }
   const rdSoHtml = rdGroups.length === 2
     ? 'Fark çoğunlukla <b>deneyim eksikliğinden</b> geliyor, görüşten değil. Seyrek kullanıcılara küçük ve somut ilk adımlar gösterin.'
@@ -1584,7 +1592,7 @@ function generateSurveyInsights(cohortFilter = activeInsightsCohort) {
   const archLead = dbArch.find(a => a.lead) || dbArch[0];
   const archSo = {
     'Pragmatik öncüler': 'Salon uygulamaya hazır. <b>İleri kullanım örnekleri ve ölçekleme yolları</b> ilgi görür.',
-    'Eleştirel düşünürler': 'Salon yetkin ama sorgulayıcı. <b>Güven, doğruluk ve etik</b> tartışmasını öne çıkarın.',
+    'Eleştirel düşünürler': 'Salon uzman ama sorgulayıcı. <b>Güven, doğruluk ve etik</b> tartışmasını öne çıkarın.',
     'Dönüşüm arayanlar': 'Salon somut kazanım arıyor. <b>Hızlı verim senaryoları</b> anlatın.',
     'Temkinli gözlemciler': 'Salon henüz uzakta. <b>Sade başlangıç adımlarıyla</b> güven kurun.'
   }[archLead.name];
@@ -1601,7 +1609,7 @@ function generateSurveyInsights(cohortFilter = activeInsightsCohort) {
       </div>
       <div class="db-filters cohort-filter-bar">
         <button class="cohort-pill ${activeInsightsCohort === 'all' ? 'active' : ''}" data-cohort="all">Tümü <b>${totalAllVotes}</b></button>
-        <button class="cohort-pill ${activeInsightsCohort === 'power' ? 'active' : ''}" data-cohort="power">Düzenli & yetkin <b>${powerGroupCount}</b></button>
+        <button class="cohort-pill ${activeInsightsCohort === 'power' ? 'active' : ''}" data-cohort="power">Düzenli & Uzman <b>${powerGroupCount}</b></button>
         <button class="cohort-pill ${activeInsightsCohort === 'explorer' ? 'active' : ''}" data-cohort="explorer">Gözlemci & seyrek <b>${explorerGroupCount}</b></button>
         <button class="cohort-pill ${activeInsightsCohort === 'skeptics' ? 'active' : ''}" data-cohort="skeptics">Temkinli <b>${skepticsGroupCount}</b></button>
       </div>
@@ -1696,7 +1704,7 @@ function generateSurveyInsights(cohortFilter = activeInsightsCohort) {
    - *İçgörü:* Mezunlar araçları hız için kullanırken, derin düşünme kaslarını kaybetmekten derin kaygı duyuyor.
 
 3. **Temas Temettüsü (Aşinalık İyimserliği):**
-   - Güç/Düzenli Kullanıcılarda Fırsat: **${powerUsersQ4Avg} / 5.0** (Tehdit Algısı %0)
+   - Uzman/Düzenli Kullanıcılarda Fırsat: **${powerUsersQ4Avg} / 5.0** (Tehdit Algısı %0)
    - Seyrek/Gözlemcilerde Fırsat: **${nonUsersQ4Avg} / 5.0** (Arafta)
    - *İçgörü:* Tehdit algısının ana kaynağı riskin kendisi değil, araçla henüz düzenli temas kurulmamış olmasıdır.
 
@@ -1812,7 +1820,7 @@ function buildPdfReportBodyHtml(data) {
       <div style="border: 1px solid #e2e8f0; background: #ffffff; border-radius: 6px; padding: 10px 12px; border-top: 4px solid #c8102e;">
         <div style="font-size: 18pt; font-weight: 900; color: #0f172a; line-height: 1.1;">%${data.powerPct}</div>
         <div style="font-size: 8.2pt; font-weight: 700; color: #334155; margin-top: 4px;">Yapay Zeka Benimseme</div>
-        <div style="font-size: 7.2pt; color: #64748b; margin-top: 2px;">Düzenli & Yetkin Kullanıcı Oranı</div>
+        <div style="font-size: 7.2pt; color: #64748b; margin-top: 2px;">Düzenli & Uzman Kullanıcı Oranı</div>
       </div>
       <div style="border: 1px solid #e2e8f0; background: #ffffff; border-radius: 6px; padding: 10px 12px; border-top: 4px solid #1d4ed8;">
         <div style="font-size: 18pt; font-weight: 900; color: #0f172a; line-height: 1.1;">${data.allQ4Avg} <span style="font-size: 10pt; color: #64748b;">/ 5.0</span></div>

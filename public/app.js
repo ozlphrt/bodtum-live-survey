@@ -90,7 +90,7 @@ class AudioNotifier {
 
 const notifier = new AudioNotifier();
 
-// BODTUM ODTÜ Alumni Audience AI Survey Questions (9 Targeted Questions - Pristine Turkish)
+// BODTUM ODTÜ Alumni Audience AI Survey Questions (9 Targeted Questions - Succinct & Mobile-Optimized)
 const DEFAULT_SURVEY = {
   title: "BODTÜM & ODTÜ Yapay Zeka Kullanım ve Eğilim Anketi",
   activeQuestionIndex: 0,
@@ -99,134 +99,134 @@ const DEFAULT_SURVEY = {
     {
       id: "q1",
       type: "single",
-      title: "Yapay zekayı günlük veya profesyonel hayatınızda ne sıklıkla kullanıyorsunuz?",
+      title: "Yapay zekayı ne sıklıkla kullanıyorsunuz?",
       options: [
-        { id: "opt1_1", text: "Gözlemciyim (Henüz aktif kullanmıyorum, gelişmeleri uzaktan izliyorum)" },
-        { id: "opt1_2", text: "Meraklı Kaşif (Ara sıra arama, metin veya çeviri için deniyorum)" },
-        { id: "opt1_3", text: "Düzenli Kullanıcı (Haftalık iş akışımın ve projelerimin doğal parçası)" },
-        { id: "opt1_4", text: "İleri Düzey Uzman Kullanıcı (Her gün işimin merkezinde, prompt ve özel araçlarla)" }
+        { id: "opt1_1", text: "Gözlemciyim (Henüz kullanmıyorum)" },
+        { id: "opt1_2", text: "Ara sıra (Merak ettikçe / nadiren)" },
+        { id: "opt1_3", text: "Düzenli kullanıcı (Haftalık iş akışımda)" },
+        { id: "opt1_4", text: "İleri düzey uzman (Her gün işimin merkezinde)" }
       ],
       votes: {}
     },
     {
       id: "q2",
       type: "multi",
-      title: "Şimdiye kadar hangi yapay zeka araçlarını deneyimlediniz?",
+      title: "Hangi yapay zeka araçlarını deneyimlediniz?",
       subtitle: "(Birden fazla seçebilirsiniz)",
       options: [
         { id: "opt2_1", text: "Sohbet Modelleri (ChatGPT, Claude, Gemini)" },
-        { id: "opt2_2", text: "Akıllı Arama & Derin Araştırma (Perplexity, Genspark, NotebookLM)" },
-        { id: "opt2_3", text: "Görsel & Medya Üretimi (Midjourney, DALL-E, Suno)" },
-        { id: "opt2_4", text: "Kurumsal Ofis Asistanları (Microsoft Copilot, Notion AI)" },
-        { id: "opt2_5", text: "Yazılım, Kod & Veri Analitiği (Cursor, GitHub Copilot, Python/API)" },
-        { id: "opt2_6", text: "Henüz hiçbirini aktif olarak kullanmadım" }
+        { id: "opt2_2", text: "Arama & Araştırma (Perplexity, NotebookLM)" },
+        { id: "opt2_3", text: "Görsel & Medya (Midjourney, Suno, DALL-E)" },
+        { id: "opt2_4", text: "Ofis Asistanları (Copilot, Notion AI)" },
+        { id: "opt2_5", text: "Kod & Veri Analizi (Cursor, GitHub Copilot, Python)" },
+        { id: "opt2_6", text: "Henüz hiçbirini kullanmadım" }
       ],
       votes: {}
     },
     {
       id: "q3",
       type: "multi",
-      title: "Yapay zekadan en çok hangi alanda somut fayda sağlıyorsunuz?",
+      title: "En çok hangi alanda fayda sağlıyorsunuz?",
       subtitle: "(En çok 2 seçenek belirleyin)",
       options: [
-        { id: "opt3_1", text: "Karmaşık belgeleri özetleme, hızlı öğrenme ve bilgi madenciliği" },
-        { id: "opt3_2", text: "Profesyonel yazışma, raporlama, konuşma metni veya yabancı dil çevirisi" },
-        { id: "opt3_3", text: "Stratejik karar alma, senaryo analizi ve beyin fırtınası partnerliği" },
-        { id: "opt3_4", text: "Rutin işleri hızlandırıp stratejik konulara zaman kazanma" },
-        { id: "opt3_5", text: "Henüz ölçülebilir somut bir fayda oluşturmadım" }
+        { id: "opt3_1", text: "Belge özetleme, araştırma ve bilgi edinme" },
+        { id: "opt3_2", text: "Metin yazımı, raporlama ve çeviri" },
+        { id: "opt3_3", text: "Stratejik karar alma ve fikir ortaklığı" },
+        { id: "opt3_4", text: "Rutin işleri hızlandırıp zaman kazanma" },
+        { id: "opt3_5", text: "Henüz somut bir fayda sağlamadım" }
       ],
       votes: {}
     },
     {
       id: "q4",
       type: "scale",
-      title: "Yapay zeka insanlığın geleceği için: Tehdit mi, Fırsat mı?",
-      subtitle: "(1: Varoluşsal Tehdit — 3: Nasıl Kullandığımıza Bağlı — 5: Muazzam Fırsat)",
+      title: "İnsanlığın geleceği için: Tehdit mi, Fırsat mı?",
+      subtitle: "(1: Büyük Tehdit — 3: Dengede — 5: Büyük Fırsat)",
       leftLabel: "Büyük Tehdit",
-      centerLabel: "Yönetişime Bağlı",
+      centerLabel: "Dengede",
       rightLabel: "Büyük Fırsat",
       scaleLabels: [
-        "1 - Kesinlikle Tehdit (İşsizlik, manipülasyon ve varoluşsal riskler)",
-        "2 - Risk ve Tehditler Ağır Basıyor",
-        "3 - Dengede (Fırsat da risk de insanlığın yönetimine bağlı)",
-        "4 - Fırsatlar ve Potansiyel Ağır Basıyor",
-        "5 - Kesinlikle Büyük Fırsat (Yeni bir aydınlanma ve refah çağı)"
+        "1 - Büyük Tehdit (İş kaybı ve varoluşsal risk)",
+        "2 - Tehdit Ağırlıklı",
+        "3 - Dengede (Nasıl kullandığımıza bağlı)",
+        "4 - Fırsat Ağırlıklı",
+        "5 - Büyük Fırsat (Yeni bir refah çağı)"
       ],
       votes: {}
     },
     {
       id: "q5",
       type: "scale",
-      title: "Yeni nesil ve eğitim: Çocuklarımız ve gençler için ne ifade ediyor?",
-      subtitle: "(1: Bilişsel Kaygı & Hazırcılık — 3: Dengeli Dönüşüm — 5: Büyük Potansiyel Sıçraması)",
+      title: "Yeni nesil ve eğitim: Çocuklarımız için ne ifade ediyor?",
+      subtitle: "(1: Derin Kaygı — 3: Dengeli — 5: Büyük Sıçrama)",
       leftLabel: "Derin Kaygı",
-      centerLabel: "Dengeli Dönüşüm",
+      centerLabel: "Dengeli",
       rightLabel: "Büyük Sıçrama",
       scaleLabels: [
-        "1 - Derin Kaygı (Hazırcılık, eleştirel düşünme kaybı ve istihdam endişesi)",
+        "1 - Derin Kaygı (Hazırcılık / düşünme kaybı)",
         "2 - Kaygılar Ağır Basıyor",
-        "3 - Dengeli Dönüşüm (Ezber biter, yeni beceriler ve eleştirel muhakeme öne çıkar)",
+        "3 - Dengeli Dönüşüm (Yeni beceriler öne çıkar)",
         "4 - Fırsatlar Ağır Basıyor",
-        "5 - Büyük Sıçrama (Tarihin en üretken ve donanımlı kuşağı yetişecek)"
+        "5 - Büyük Sıçrama (Daha üretken kuşak)"
       ],
       votes: {}
     },
     {
       id: "q6",
       type: "scale",
-      title: "Türkiye'deki kurumlar ve liderler yapay zeka çağına ne kadar hazır?",
-      subtitle: "(1: Çok Hazırlıksız & Fırsatlar Kaçıyor — 3: Merak Var Ama Strateji Yok — 5: Vizyoner & Çevik)",
+      title: "Türkiye'deki kurumlar yapay zekaya ne kadar hazır?",
+      subtitle: "(1: Çok Hazırlıksız — 3: Strateji Yok — 5: Çevik & Hazır)",
       leftLabel: "Çok Hazırlıksız",
-      centerLabel: "Arafta / Stratejisiz",
-      rightLabel: "Çevik & Öncü",
+      centerLabel: "Stratejisiz",
+      rightLabel: "Çevik & Hazır",
       scaleLabels: [
-        "1 - Çok Hazırlıksız (Fırsatlar kaçıyor, yönetimsel vizyon eksik)",
-        "2 - Oldukça Geride Kalıyoruz",
-        "3 - Arafta (Yoğun ilgi var fakat somut kurumsal strateji yok)",
-        "4 - Ciddi Adımlar ve İlerlemeler Var",
-        "5 - Çevik ve Hazır (Dönüşüme cesaretle liderlik ediliyor)"
+        "1 - Çok Hazırlıksız (Vizyon eksik)",
+        "2 - Geride Kalıyoruz",
+        "3 - Merak Var, Strateji Yok",
+        "4 - Ciddi İlerlemeler Var",
+        "5 - Çevik ve Hazır (Öncü liderlik)"
       ],
       votes: {}
     },
     {
       id: "q7",
       type: "scale",
-      title: "Zihinsel bağımsızlık: Yapay zeka insan aklını köreltir mi, güçlendirir mi?",
-      subtitle: "(1: Düşünsel Körelme — 3: Dengeli Araç — 5: Entelektüel Sıçrama)",
-      leftLabel: "Düşünsel Körelme",
-      centerLabel: "Dengeli Araç",
-      rightLabel: "Zihinsel Büyüme",
+      title: "Yapay zeka insan aklını köreltir mi, güçlendirir mi?",
+      subtitle: "(1: Köreltir — 3: Kullanıma Bağlı — 5: Güçlendirir)",
+      leftLabel: "Köreltir",
+      centerLabel: "Kullanıma Bağlı",
+      rightLabel: "Güçlendirir",
       scaleLabels: [
-        "1 - Düşünsel Körelme (Derin muhakeme ve analitik düşünce zayıflar)",
-        "2 - Zihinsel Tembellik Riski Ağır Basıyor",
-        "3 - Dengeli Araç (Kullanıcının zihinsel disiplinine bağlı)",
-        "4 - Zihinsel Üretkenliği Artırır",
-        "5 - Entelektüel Sıçrama (Rutin kalkar, yaratıcı derinlik artar)"
+        "1 - Köreltir (Zihinsel tembellik)",
+        "2 - Körelme Riski Ağır Basıyor",
+        "3 - Dengeli Araç (Kullanıma bağlı)",
+        "4 - Üretkenliği Artırır",
+        "5 - Güçlendirir (Zihinsel sıçrama)"
       ],
       votes: {}
     },
     {
       id: "q8",
       type: "single",
-      title: "Yapay zekaya temkinli yaklaşmanıza veya mesafeli durmanıza en çok ne sebep oluyor?",
+      title: "Temkinli yaklaşmanıza en çok ne sebep oluyor?",
       options: [
-        { id: "opt8_1", text: "Veri gizliliği, kurumsal güvenlik ve telif/hukuk belirsizlikleri" },
-        { id: "opt8_2", text: "Halüsinasyon (yanıltıcı yanıt) ve doğruluk teyidi zorluğu" },
-        { id: "opt8_3", text: "Kendi uzmanlık alanıma ve günlük işime nasıl entegre edeceğimi bilememek" },
-        { id: "opt8_4", text: "Hızla değişen yenilikleri takip etmeye yeterli zaman bulamamak" },
-        { id: "opt8_5", text: "Mesafe koymuyorum; hayatımın ve işimin ayrılmaz bir parçası" }
+        { id: "opt8_1", text: "Veri gizliliği, güvenlik ve telif kaygısı" },
+        { id: "opt8_2", text: "Yanıltıcı yanıtlar (halüsinasyon) ve teyit zorluğu" },
+        { id: "opt8_3", text: "Kendi işime nasıl entegre edeceğimi bilememek" },
+        { id: "opt8_4", text: "Yenilikleri takip etmeye zaman bulamamak" },
+        { id: "opt8_5", text: "Mesafe koymuyorum, aktif kullanıyorum" }
       ],
       votes: {}
     },
     {
       id: "q9",
       type: "single",
-      title: "Bugünkü ODTÜ / BODTÜM buluşmasından en çok hangi kazanımla ayrılmak istersiniz?",
+      title: "Bugünkü buluşmadan en çok hangi kazanımla ayrılmak istersiniz?",
       options: [
-        { id: "opt9_1", text: "Hemen yarın kendi işimde uygulayabileceğim somut taktik ve yöntemler" },
-        { id: "opt9_2", text: "Geleceğin meslekleri, yatırımlar ve stratejik eğilimlere dair büyük resim" },
-        { id: "opt9_3", text: "Büyük dil modellerinin (LLM) gerçekte nasıl çalıştığı ve sınırları" },
-        { id: "opt9_4", text: "Etik, denetim, toplum ve insanlığın geleceğine dair felsefi tartışma" }
+        { id: "opt9_1", text: "İşimde hemen uygulayabileceğim somut taktikler" },
+        { id: "opt9_2", text: "Geleceğin meslekleri ve stratejik büyük resim" },
+        { id: "opt9_3", text: "Yapay zekanın nasıl çalıştığı ve sınırları" },
+        { id: "opt9_4", text: "Etik, toplum ve insanlığın geleceği" }
       ],
       votes: {}
     }
@@ -251,11 +251,11 @@ try {
   }
 } catch (e) { }
 
-// Ensure opt1_4 uses "İleri Düzey Uzman Kullanıcı"
+// Ensure opt1_4 uses concise text
 if (survey && survey.questions && survey.questions[0] && survey.questions[0].options) {
   const opt1_4 = survey.questions[0].options.find(o => o.id === 'opt1_4');
   if (opt1_4) {
-    opt1_4.text = "İleri Düzey Uzman Kullanıcı (Her gün işimin merkezinde, prompt ve özel araçlarla)";
+    opt1_4.text = "İleri düzey uzman (Her gün işimin merkezinde)";
   }
 }
 

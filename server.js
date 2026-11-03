@@ -448,13 +448,15 @@ app.get('/api/survey/export', (req, res) => {
   });
 });
 
-// Reset all responses
+// Reset all responses and participants
 app.post('/api/survey/reset', (req, res) => {
   survey.questions.forEach(q => {
     q.votes = {};
   });
+  activeParticipants.clear();
+  io.emit('participants_count', 0);
   io.emit('survey_updated', getFullSurveyPayload());
-  res.json({ success: true, message: "All responses reset." });
+  res.json({ success: true, message: "All responses and participants reset." });
 });
 
 // Socket.io Real-time communications

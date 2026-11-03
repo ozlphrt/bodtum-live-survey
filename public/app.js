@@ -540,10 +540,17 @@ newQuestionForm.addEventListener('submit', (e) => {
 
 // Global Survey Reset Function (Accessible on All Pages)
 function executeSurveyReset() {
-  if (confirm('Tüm katılımcı oylarını sıfırlamak istediğinize emin misiniz?')) {
+  if (confirm('Tüm katılımcı oylarını ve katılımcı sayacını sıfırlamak istediğinize emin misiniz?')) {
     survey.resetEpoch = Date.now();
     survey.questions.forEach(q => q.votes = {});
     survey.activeQuestionIndex = 0;
+
+    // Reset active participants / contributors / responders count to 0
+    activeParticipants.clear();
+    if (participantCount) participantCount.textContent = '0';
+    const qrPartCount = document.getElementById('qrParticipantCount');
+    if (qrPartCount) qrPartCount.textContent = '0';
+
     saveSurvey();
     if (mqttClient && mqttClient.connected) {
       mqttClient.publish(`bodtum/survey/${roomId}/reset`, JSON.stringify({ resetEpoch: survey.resetEpoch, roomId }), { qos: 1 });
@@ -553,6 +560,7 @@ function executeSurveyReset() {
     if (currentAdminView === 'insights') {
       generateSurveyInsights();
     }
+    showToast('Tüm oylar ve katılımcı sayısı sıfırlandı.');
   }
 }
 
@@ -643,10 +651,13 @@ function renderSurvey() {
     });
   }
 
-  // Update Header Tab Badge
+  // Update Header Tab Badge & Participant Count
   const tabBadge = document.getElementById('tabQuestionBadge');
   if (tabBadge) {
     tabBadge.textContent = `${survey.activeQuestionIndex + 1}/${survey.questions.length}`;
+  }
+  if (participantCount) {
+    participantCount.textContent = activeParticipants.size;
   }
 
   // Update QR Page Participant Counter

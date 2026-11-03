@@ -429,13 +429,6 @@ function renderMultiOptions(options) {
 
 // Linear Scale Options (1 to 5 Spectrum)
 function renderScaleOptions(q) {
-  const labels = q.scaleLabels || [
-    "1 - Kesinlikle Tehdit",
-    "2 - Tehdit Ağırlıklı",
-    "3 - Kullanım Amacına Bağlı",
-    "4 - Fırsat Ağırlıklı",
-    "5 - Kesinlikle Büyük Fırsat"
-  ];
   const currentVal = typeof selectedAnswer === 'number' ? selectedAnswer : null;
 
   let html = `
@@ -459,16 +452,12 @@ function renderScaleOptions(q) {
         <span class="anchor-tag center">${escapeHtml(q.centerLabel || 'Dengeli')}</span>
         <span class="anchor-tag right">${escapeHtml(q.rightLabel || 'Yüksek')} →</span>
       </div>
-      <div class="scale-hint-box ${currentVal ? 'active' : ''}" id="scaleHintText">
-        ${currentVal ? labels[currentVal - 1] : 'Değerlendirmek için 1-5 arasında bir puan seçin'}
-      </div>
     </div>
   `;
 
   voterInputArea.innerHTML = html;
 
   const buttons = voterInputArea.querySelectorAll('.scale-choice-btn');
-  const hintEl = document.getElementById('scaleHintText');
 
   buttons.forEach(btn => {
     btn.addEventListener('click', () => {
@@ -476,10 +465,6 @@ function renderScaleOptions(q) {
       selectedAnswer = val;
       buttons.forEach(b => b.classList.remove('selected'));
       btn.classList.add('selected');
-      if (hintEl) {
-        hintEl.textContent = labels[val - 1] || `${val} Puan`;
-        hintEl.classList.add('active');
-      }
       voterSubmitBtn.disabled = false;
     });
   });
@@ -487,7 +472,6 @@ function renderScaleOptions(q) {
 
 // Rating Options (1 to 5 Stars)
 function renderRatingOptions(q) {
-  const labels = q.labels || ["Çok Kötü", "Gelişmeli", "İyi", "Çok İyi", "Harika 🌟"];
   let html = '<div class="rating-row-interactive">';
   for (let i = 1; i <= 5; i++) {
     html += `
@@ -497,12 +481,10 @@ function renderRatingOptions(q) {
       </button>
     `;
   }
-  const currentHint = selectedAnswer ? `${selectedAnswer} Yıldız - ${labels[selectedAnswer - 1]}` : 'Puanlamak için bir yıldıza dokunun';
-  html += `</div><div class="rating-label-hint" id="ratingHint">${currentHint}</div>`;
+  html += `</div>`;
   voterInputArea.innerHTML = html;
 
   const starButtons = voterInputArea.querySelectorAll('.star-btn');
-  const ratingHint = document.getElementById('ratingHint');
 
   starButtons.forEach(btn => {
     btn.addEventListener('click', () => {
@@ -513,7 +495,6 @@ function renderRatingOptions(q) {
         if (bVal <= val) b.classList.add('active');
         else b.classList.remove('active');
       });
-      ratingHint.textContent = `${val} Yıldız - ${labels[val - 1]}`;
       voterSubmitBtn.disabled = false;
     });
   });

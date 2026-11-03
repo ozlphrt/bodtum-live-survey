@@ -1926,6 +1926,170 @@ function generateSurveyInsights(cohortFilter = activeInsightsCohort) {
 // ----------------------------------------------------
 // Executive Printable & PDF Report Generator
 // ----------------------------------------------------
+function renderPdfQuestionResultsHtml(q, idx) {
+  const results = calculateResults(q);
+  const total = results.totalVotes || 0;
+  const letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+
+  let typeBadge = 'Tek Seçim';
+  let typeColor = '#2563eb';
+  let typeBg = '#eff6ff';
+  if (q.type === 'multi') {
+    typeBadge = 'Çoklu Seçim';
+    typeColor = '#7c3aed';
+    typeBg = '#f5f3ff';
+  } else if (q.type === 'scale') {
+    typeBadge = '1-5 Doğrusal Ölçek';
+    typeColor = '#059669';
+    typeBg = '#ecfdf5';
+  } else if (q.type === 'rating') {
+    typeBadge = 'Değerlendirme';
+    typeColor = '#d97706';
+    typeBg = '#fffbeb';
+  } else if (q.type === 'wordcloud') {
+    typeBadge = 'Açık Uçlu / Kelime Bulutu';
+    typeColor = '#c8102e';
+    typeBg = '#fef2f2';
+  }
+
+  let bodyContent = '';
+
+  if (q.type === 'single' || q.type === 'multi') {
+    const breakdown = results.breakdown || [];
+    let maxCount = 0;
+    breakdown.forEach(b => { if (b.count > maxCount) maxCount = b.count; });
+
+    bodyContent = `
+      <div style="display: flex; flex-direction: column; gap: 5px; margin-top: 8px;">
+        ${breakdown.map((item, optIdx) => {
+          const letter = letters[optIdx] || (optIdx + 1);
+          const isLead = maxCount > 0 && item.count === maxCount && total > 1;
+          const barColor = isLead ? '#c8102e' : '#2563eb';
+          const bgBar = isLead ? 'rgba(200, 16, 46, 0.14)' : 'rgba(37, 99, 235, 0.10)';
+          return `
+            <div style="background: #ffffff; border: 1px solid ${isLead ? 'rgba(200, 16, 46, 0.4)' : '#e2e8f0'}; border-radius: 6px; padding: 6px 10px; position: relative; overflow: hidden;">
+              <div style="position: absolute; left: 0; top: 0; bottom: 0; width: ${item.percentage}%; background: ${bgBar}; border-right: 2.5px solid ${barColor};"></div>
+              <div style="position: relative; z-index: 2; display: flex; justify-content: space-between; align-items: center; font-size: 8.5pt;">
+                <div style="display: flex; align-items: center; gap: 7px; flex: 1; padding-right: 12px; min-width: 0;">
+                  <span style="display: inline-block; width: 17px; height: 17px; line-height: 17px; text-align: center; border-radius: 3px; background: ${isLead ? '#c8102e' : '#e2e8f0'}; color: ${isLead ? '#ffffff' : '#475569'}; font-weight: 700; font-size: 7.5pt; flex-shrink: 0;">${letter}</span>
+                  <span style="font-weight: ${isLead ? '700' : '600'}; color: #0f172a;">${escapeHtml(item.text)}</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0;">
+                  <span style="color: #64748b; font-size: 7.5pt;">${item.count} oy</span>
+                  <span style="font-weight: 800; color: ${isLead ? '#c8102e' : '#0f172a'}; min-width: 38px; text-align: right; font-size: 9pt;">%${item.percentage}</span>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    `;
+  } else if (q.type === 'scale') {
+    const avg = results.average || '0.0';
+    const breakdown = results.breakdown || [];
+    bodyContent = `
+      <div style="margin-top: 8px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; border: 1px solid #e2e8f0; padding: 6px 12px; border-radius: 6px; margin-bottom: 7px;">
+          <div style="font-size: 8pt; color: #475569;">
+            <strong style="color: #0f172a;">Katılımcı Ortalaması:</strong>
+            <span style="color: #64748b; margin-left: 6px;">(← ${escapeHtml(q.leftLabel || 'Düşük')} | ${escapeHtml(q.rightLabel || 'Yüksek')} →)</span>
+          </div>
+          <div style="font-size: 12pt; font-weight: 900; color: #059669;">
+            ${avg} <span style="font-size: 8pt; color: #64748b; font-weight: 600;">/ 5.0</span>
+          </div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 5px;">
+          ${breakdown.map(item => `
+            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 5px 10px; position: relative; overflow: hidden;">
+              <div style="position: absolute; left: 0; top: 0; bottom: 0; width: ${item.percentage}%; background: rgba(5, 150, 105, 0.12); border-right: 2.5px solid #059669;"></div>
+              <div style="position: relative; z-index: 2; display: flex; justify-content: space-between; align-items: center; font-size: 8.2pt;">
+                <div style="display: flex; align-items: center; gap: 6px;">
+                  <span style="display: inline-block; width: 16px; height: 16px; line-height: 16px; text-align: center; border-radius: 50%; background: #e2e8f0; color: #0f172a; font-weight: 700; font-size: 7pt;">${item.value}</span>
+                  <span style="font-weight: 600; color: #1e293b;">${escapeHtml(item.label)}</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span style="color: #64748b; font-size: 7.5pt;">${item.count} oy</span>
+                  <span style="font-weight: 800; color: #0f172a; min-width: 36px; text-align: right; font-size: 8.8pt;">%${item.percentage}</span>
+                </div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  } else if (q.type === 'rating') {
+    const avg = results.average || '0.0';
+    const breakdown = results.breakdown || [];
+    bodyContent = `
+      <div style="margin-top: 8px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; border: 1px solid #e2e8f0; padding: 6px 12px; border-radius: 6px; margin-bottom: 7px;">
+          <span style="font-size: 8pt; font-weight: 700; color: #0f172a;">Ortalama Değerlendirme:</span>
+          <span style="font-size: 11pt; font-weight: 900; color: #d97706;">★ ${avg} <span style="font-size: 8pt; color: #64748b;">/ 5.0</span></span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 5px;">
+          ${breakdown.map(item => `
+            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 5px 10px; position: relative; overflow: hidden;">
+              <div style="position: absolute; left: 0; top: 0; bottom: 0; width: ${item.percentage}%; background: rgba(217, 119, 6, 0.12); border-right: 2.5px solid #d97706;"></div>
+              <div style="position: relative; z-index: 2; display: flex; justify-content: space-between; align-items: center; font-size: 8.2pt;">
+                <span style="font-weight: 600; color: #1e293b;">${item.rating} Yıldız</span>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span style="color: #64748b; font-size: 7.5pt;">${item.count} oy</span>
+                  <span style="font-weight: 800; color: #0f172a; min-width: 36px; text-align: right;">%${item.percentage}</span>
+                </div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  } else if (q.type === 'wordcloud') {
+    const words = results.words || [];
+    const entries = results.recentEntries || [];
+    bodyContent = `
+      <div style="margin-top: 8px;">
+        ${words.length > 0 ? `
+          <div style="font-size: 7.5pt; font-weight: 800; color: #64748b; text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.05em;">Öne Çıkan Kelimeler</div>
+          <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px;">
+            ${words.slice(0, 16).map(w => `
+              <span style="background: #f1f5f9; border: 1px solid #cbd5e1; color: #0f172a; font-size: 8pt; font-weight: 700; padding: 3px 8px; border-radius: 4px;">
+                ${escapeHtml(w.word)} <span style="font-size: 7pt; color: #c8102e;">(${w.count})</span>
+              </span>
+            `).join('')}
+          </div>
+        ` : ''}
+        ${entries.length > 0 ? `
+          <div style="font-size: 7.5pt; font-weight: 800; color: #64748b; text-transform: uppercase; margin-bottom: 5px; letter-spacing: 0.05em;">Son Gelen Katılımcı Cümleleri</div>
+          <div style="display: flex; flex-direction: column; gap: 4px;">
+            ${entries.slice(0, 5).map(e => `
+              <div style="background: #f8fafc; border-left: 3px solid #cbd5e1; padding: 4px 8px; font-size: 8pt; color: #334155; font-style: italic;">
+                "${escapeHtml(e.text)}"
+              </div>
+            `).join('')}
+          </div>
+        ` : '<div style="font-size: 8pt; color: #94a3b8; font-style: italic;">Henüz serbest metin yanıtı kaydedilmedi.</div>'}
+      </div>
+    `;
+  }
+
+  return `
+    <div class="avoid-break" style="break-inside: avoid; page-break-inside: avoid; border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; padding: 11px 13px; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px;">
+        <div style="flex: 1; min-width: 0;">
+          <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+            <span style="background: #c8102e; color: #ffffff; font-size: 7pt; font-weight: 800; padding: 2px 6px; border-radius: 3px; text-transform: uppercase;">Soru ${idx + 1}</span>
+            <span style="background: ${typeBg}; color: ${typeColor}; border: 1px solid rgba(0,0,0,0.06); font-size: 7pt; font-weight: 700; padding: 2px 6px; border-radius: 3px;">${typeBadge}</span>
+          </div>
+          <div style="font-size: 9.5pt; font-weight: 800; color: #0f172a; line-height: 1.35;">${escapeHtml(q.title)}</div>
+        </div>
+        <div style="text-align: right; flex-shrink: 0;">
+          <span style="background: #f8fafc; border: 1px solid #cbd5e1; color: #0f172a; font-size: 7.5pt; font-weight: 800; padding: 3px 8px; border-radius: 12px; display: inline-block;">${total} Yanıt</span>
+        </div>
+      </div>
+      ${bodyContent}
+    </div>
+  `;
+}
+
 function buildPdfReportBodyHtml(data) {
   return `
   <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; color: #0f172a; background: #ffffff; padding: 24px 30px; font-size: 9.5pt; line-height: 1.45;">
@@ -2076,8 +2240,39 @@ function buildPdfReportBodyHtml(data) {
 
     <!-- Footer -->
     <div style="border-top: 1px solid #cbd5e1; padding-top: 8px; margin-top: 14px; display: flex; justify-content: space-between; font-size: 7.5pt; color: #94a3b8;">
-      <div>ODTÜ Mezunlar Derneği Bodrum (BODTÜM) — Canlı Kitle Zekası Platformu</div>
+      <div>ODTÜ Mezunlar Derneği Bodrum (BODTÜM) — Canlı Kitle Zekası Platformu (Yönetici Özeti)</div>
       <div>Rapor Oluşturulma Saati: ${new Date().toLocaleTimeString('tr-TR')}</div>
+    </div>
+
+    <!-- ==========================================================================
+         BÖLÜM 2: CANLI SAHNE — TÜM SORULAR VE KATILIMCI YANITLARI
+         ========================================================================== -->
+    <div class="page-break" style="page-break-before: always; break-before: page; margin-top: 28px; padding-top: 20px; border-top: 3px solid #c8102e;">
+      <!-- Bölüm Başlığı -->
+      <div style="display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; margin-bottom: 14px;">
+        <div>
+          <div style="font-size: 15pt; font-weight: 900; color: #0f172a; letter-spacing: -0.02em;">
+            <span style="color: #c8102e;">CANLI SAHNE:</span> TÜM SORULAR VE KATILIMCI YANITLARI
+          </div>
+          <div style="font-size: 8.5pt; font-weight: 600; color: #64748b; margin-top: 3px;">
+            Katılımcıların canlı ankette her bir soruya verdiği doğrudan yanıt oranları ve detaylı oy dağılımları
+          </div>
+        </div>
+        <div style="text-align: right; font-size: 8pt; color: #64748b;">
+          <span style="background: #f1f5f9; border: 1px solid #cbd5e1; padding: 4px 10px; border-radius: 6px; font-weight: 700; color: #0f172a;">Toplam ${survey.questions.length} Soru</span>
+        </div>
+      </div>
+
+      <!-- Soru Soru Sonuç Kartları -->
+      <div style="display: flex; flex-direction: column; gap: 4px;">
+        ${survey.questions.map((q, idx) => renderPdfQuestionResultsHtml(q, idx)).join('')}
+      </div>
+
+      <!-- Canlı Sahne Sonu Kapanış Notu -->
+      <div style="border-top: 1px solid #cbd5e1; padding-top: 8px; margin-top: 14px; display: flex; justify-content: space-between; font-size: 7.5pt; color: #94a3b8;">
+        <div>ODTÜ Mezunlar Derneği Bodrum (BODTÜM) — Canlı Anket & Sahne Sonuçları</div>
+        <div>Tarih: ${data.dateStr} | Oturum Kodu: ${data.roomCode}</div>
+      </div>
     </div>
   </div>
   `;
@@ -2115,11 +2310,12 @@ function exportInsightsAsPDF(data) {
 
   const filename = `BODTUM_ODTU_Yapay_Zeka_Yonetici_Raporu_${new Date().toISOString().slice(0, 10)}.pdf`;
   const opt = {
-    margin: [6, 6, 6, 6],
+    margin: [8, 8, 8, 8],
     filename,
     image: { type: 'jpeg', quality: 0.98 },
     html2canvas: { scale: 2, useCORS: true, letterRendering: true, logging: false },
-    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+    pagebreak: { mode: ['css', 'legacy'], before: '.page-break', avoid: '.avoid-break' }
   };
 
   html2pdf().set(opt).from(reportEl).save().then(() => {
@@ -2154,6 +2350,8 @@ function openPrintWindowFallback(data) {
     @page { size: A4 portrait; margin: 10mm; }
     * { box-sizing: border-box; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
     body { margin: 0; padding: 10px; background: #ffffff; }
+    .page-break { page-break-before: always !important; break-before: page !important; }
+    .avoid-break { page-break-inside: avoid !important; break-inside: avoid !important; }
     @media print { body { padding: 0; } }
   </style>
 </head>

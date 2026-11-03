@@ -1106,6 +1106,12 @@ function generateDiverseAlumniBatch(count = 15) {
 }
 
 function autoPopulateResponses(count = 15) {
+  const warningMsg = `⚠️ DİKKAT: Demo & Test Verisi Uyarısı\n\nBu işlem yalnızca test ve demo amaçlıdır.\n\nSisteme ${count} adet rastgele yanıt eklenecektir. Bu işlem gerçek katılımcıların yanıtlarını simülasyon verileriyle karıştıracak ve gerçek sonuçları kirletecektir.\n\nYine de demo verileri eklemek istiyor musunuz?`;
+
+  if (!confirm(warningMsg)) {
+    return;
+  }
+
   const dynamicBatch = generateDiverseAlumniBatch(count);
 
   dynamicBatch.forEach((profile, idx) => {

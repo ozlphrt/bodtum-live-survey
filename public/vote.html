@@ -49,6 +49,12 @@
       border-radius: var(--radius-xl);
       padding: 24px;
       margin-bottom: 20px;
+      animation: fadeInQ 0.22s ease-out;
+    }
+
+    @keyframes fadeInQ {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
     .voter-title {
@@ -649,6 +655,6 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/mqtt@5.3.5/dist/mqtt.min.js"></script>
-  <script src="./vote.js?v=11"></script>
+  <script src="./vote.js?v=12"></script>
 </body>
 </html>

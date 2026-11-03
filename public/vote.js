@@ -634,8 +634,17 @@ function submitVote() {
   if (!q || selectedAnswer === null || selectedAnswer === undefined) return;
   if (Array.isArray(selectedAnswer) && selectedAnswer.length === 0) return;
 
+  // Immediate visual feedback on the button
   voterSubmitBtn.disabled = true;
-  voterSubmitBtn.textContent = 'Gönderiliyor...';
+  voterSubmitBtn.textContent = 'Kaydedildi ✓';
+  voterSubmitBtn.style.background = '#10b981';
+  voterSubmitBtn.style.borderColor = '#10b981';
+  voterSubmitBtn.style.color = '#ffffff';
+
+  // Haptic feedback for mobile phones
+  if (typeof navigator !== 'undefined' && navigator.vibrate) {
+    try { navigator.vibrate(35); } catch (e) {}
+  }
 
   // Save vote locally
   saveStoredVote(q.id, selectedAnswer);
@@ -644,10 +653,47 @@ function submitVote() {
   publishVote(q.id, selectedAnswer);
 
   editingAnswer = false;
-  justVoted = true;
+  justVoted = false;
 
-  // Render feedback view immediately with fresh local answer
-  renderCurrentView(true);
+  // Automatically advance to the next question without requiring an extra tap
+  setTimeout(() => {
+    // Reset button custom styles
+    voterSubmitBtn.style.background = '';
+    voterSubmitBtn.style.borderColor = '';
+    voterSubmitBtn.style.color = '';
+
+    const storedVotes = getStoredVotes();
+
+    // Look for next unanswered question sequentially
+    let nextIndex = -1;
+    for (let i = userQuestionIndex + 1; i < questions.length; i++) {
+      if (storedVotes[questions[i].id] === undefined) {
+        nextIndex = i;
+        break;
+      }
+    }
+    // If no unanswered question ahead, search from beginning
+    if (nextIndex === -1) {
+      for (let i = 0; i < userQuestionIndex; i++) {
+        if (storedVotes[questions[i].id] === undefined) {
+          nextIndex = i;
+          break;
+        }
+      }
+    }
+
+    if (nextIndex !== -1) {
+      userQuestionIndex = nextIndex;
+      viewingCompleted = false;
+      renderCurrentView();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      // All questions have been answered -> view completed summary
+      viewingCompleted = true;
+      renderCurrentView();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, 220);
 }
 
 if (voterSubmitBtn) {

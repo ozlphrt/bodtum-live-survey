@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node server.js",
-    "test": "node tests/pollen-core.test.js && node tests/pollen-import.test.js"
+    "test": "node tests/pollen-core.test.js && node tests/pollen-import.test.js && node tests/pollen-analytics.test.js"
   },
   "keywords": [],
   "author": "",

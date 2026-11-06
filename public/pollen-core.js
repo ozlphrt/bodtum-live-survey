@@ -256,7 +256,7 @@
               "text": "İleri düzey uzman (Her gün işimin merkezinde)"
             }
           ],
-          "tag": "adoption"
+          "tag": "benimseme"
         },
         {
           "id": "q2",
@@ -289,7 +289,7 @@
               "text": "Henüz hiçbirini kullanmadım"
             }
           ],
-          "tag": "tools"
+          "tag": "araçlar"
         },
         {
           "id": "q3",
@@ -319,7 +319,7 @@
             }
           ],
           "maxSelect": 2,
-          "tag": "value"
+          "tag": "fayda"
         },
         {
           "id": "q4",
@@ -336,7 +336,7 @@
             "4 - Fırsat Ağırlıklı",
             "5 - Büyük Fırsat (Yeni bir refah çağı)"
           ],
-          "tag": "sentiment"
+          "tag": "duygu"
         },
         {
           "id": "q5",
@@ -353,7 +353,7 @@
             "4 - Fırsatlar Ağır Basıyor",
             "5 - Büyük Sıçrama (Daha üretken kuşak)"
           ],
-          "tag": "sentiment"
+          "tag": "duygu"
         },
         {
           "id": "q6",
@@ -370,7 +370,7 @@
             "4 - Ciddi İlerlemeler Var",
             "5 - Çevik ve Hazır (Öncü liderlik)"
           ],
-          "tag": "readiness"
+          "tag": "hazırlık"
         },
         {
           "id": "q7",
@@ -387,7 +387,7 @@
             "4 - Üretkenliği Artırır",
             "5 - Güçlendirir (Zihinsel sıçrama)"
           ],
-          "tag": "sentiment"
+          "tag": "duygu"
         },
         {
           "id": "q8",
@@ -415,7 +415,7 @@
               "text": "Mesafe koymuyorum, aktif kullanıyorum"
             }
           ],
-          "tag": "barriers"
+          "tag": "engeller"
         },
         {
           "id": "q9",
@@ -439,7 +439,7 @@
               "text": "Etik, toplum ve insanlığın geleceği"
             }
           ],
-          "tag": "expectation"
+          "tag": "beklenti"
         }
       ]
     }

@@ -157,6 +157,7 @@ function loadSurveyDefinition(definition) {
   const qrPartCount = document.getElementById('qrParticipantCount');
   if (qrPartCount) qrPartCount.textContent = '0';
 
+  genericDashboardForced = false;
   localStorage.setItem(SURVEY_DEF_KEY, JSON.stringify(Pollen.toDefinition(survey)));
   saveSurvey();
   applySurveyMeta();
@@ -929,6 +930,7 @@ function handleIncomingVote(data) {
   notifier.playVoteChime();
   renderSurvey();
   broadcastState();
+  if (currentAdminView === 'insights' && usesGenericDashboard()) scheduleInsightsRefresh();
 }
 
 function broadcastState() {
@@ -1229,24 +1231,50 @@ function buildRadarChartSvg(q4, q5, q6, q7) {
 // ----------------------------------------------------
 let activeInsightsCohort = 'all';
 
-// Surveys built in the builder do not have the BODTUM-specific cockpit yet; they still get
-// live results on the stage and a per-question PDF report.
-function renderGenericInsightsPlaceholder(body) {
-  const voters = new Set();
-  survey.questions.forEach(q => Object.keys(q.votes || {}).forEach(v => voters.add(v)));
-  body.innerHTML = `
-    <div style="text-align: center; padding: 60px 24px; background: var(--surface); border-radius: var(--radius-xl); border: 1px solid var(--border); max-width: 560px; margin: 60px auto;">
-      <h2 style="font-size: 1.35rem; font-weight: 700; color: #fff; margin-bottom: 8px;">${escapeHtml(survey.title)}</h2>
-      <p style="color: var(--text-secondary); font-size: 0.92rem; line-height: 1.55; margin-bottom: 6px;">
-        <strong style="color: #fff;">${voters.size}</strong> katılımcı · <strong style="color: #fff;">${survey.questions.length}</strong> soru
-      </p>
-      <p style="color: var(--text-secondary); font-size: 0.88rem; line-height: 1.55; margin-bottom: 4px;">
-        Çapraz analiz ve otomatik içgörü paneli bu anket türü için hazırlanıyor.
-      </p>
-      <p style="color: var(--text-secondary); font-size: 0.88rem; line-height: 1.55;">
-        Şimdilik canlı sonuçları <strong style="color: #fff;">Canlı Sahne</strong> sekmesinde görebilir, soru bazlı sonuçları PDF olarak indirebilirsiniz.
-      </p>
-    </div>`;
+// Every survey gets the generic dashboard (filters, insights, cross-analysis). The BODTUM survey also keeps
+// its bespoke cockpit; a button in the sub-navigation switches between the two.
+let genericDashboardForced = false;
+let insightsRefreshTimer = null;
+
+function usesGenericDashboard() {
+  return !isBodtumCompatible() || genericDashboardForced;
+}
+
+// New votes refresh the generic dashboard while it is on screen (debounced).
+function scheduleInsightsRefresh() {
+  clearTimeout(insightsRefreshTimer);
+  insightsRefreshTimer = setTimeout(() => {
+    if (currentAdminView === 'insights' && usesGenericDashboard()) generateSurveyInsights();
+  }, 600);
+}
+
+// Header of the analysis page: the BODTUM wording only belongs to the BODTUM survey.
+function updateInsightsToggle() {
+  const bodtum = isBodtumCompatible();
+  const btn = document.getElementById('insightsViewToggleBtn');
+  if (btn) {
+    btn.style.display = bodtum ? '' : 'none';
+    const label = btn.querySelector('span');
+    if (label) label.textContent = genericDashboardForced ? 'BODTÜM kokpiti' : 'Genel panel (çapraz analiz)';
+  }
+  const title = document.querySelector('.subnav-title');
+  const desc = document.querySelector('.subnav-desc');
+  if (title && desc) {
+    if (title.dataset.original === undefined) {
+      title.dataset.original = title.textContent;
+      desc.dataset.original = desc.textContent;
+    }
+    title.textContent = bodtum ? title.dataset.original : 'Analiz & Rapor';
+    desc.textContent = bodtum ? desc.dataset.original : survey.title;
+  }
+}
+
+function renderGenericDashboard(body) {
+  PollenDashboard.render(body, survey, {
+    onDemo: () => autoPopulateResponses(15).then(() => {
+      if (currentAdminView === 'insights') generateSurveyInsights();
+    })
+  });
 
   const pdfBtn = document.getElementById('copyInsightsMarkdownBtn');
   if (pdfBtn) {
@@ -1254,7 +1282,7 @@ function renderGenericInsightsPlaceholder(body) {
       generic: true,
       dateStr: new Date().toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' }),
       roomCode: roomId,
-      totalAllVotes: voters.size
+      totalAllVotes: PollenAnalytics.collectResponses(survey).length
     });
   }
 }
@@ -1264,8 +1292,9 @@ function generateSurveyInsights(cohortFilter = activeInsightsCohort) {
   const body = document.getElementById('insightsFullPageBody');
   if (!body) return;
 
-  if (!isBodtumCompatible()) {
-    renderGenericInsightsPlaceholder(body);
+  updateInsightsToggle();
+  if (usesGenericDashboard()) {
+    renderGenericDashboard(body);
     return;
   }
 
@@ -2052,6 +2081,8 @@ function buildGenericPdfBodyHtml(data) {
         <div><strong>Oturum Kodu:</strong> ${data.roomCode}</div>
       </div>
     </div>
+    ${PollenDashboard.pdfSummaryHtml(survey)}
+    <div class="page-break" style="page-break-before: always; break-before: page; font-size: 10.5pt; font-weight: 800; color: #0f172a; border-bottom: 1.5px solid #e2e8f0; padding-bottom: 4px; margin: 0 0 10px;">Soru bazlı sonuçlar</div>
     ${survey.questions.map((q, idx) => renderPdfQuestionResultsHtml(q, idx)).join('')}
     <div style="border-top: 1px solid #cbd5e1; padding-top: 8px; margin-top: 14px; font-size: 7.5pt; color: #94a3b8;">
       Pollen — Canlı Anket Platformu · Rapor Oluşturulma Saati: ${new Date().toLocaleTimeString('tr-TR')}
@@ -2279,7 +2310,13 @@ function exportInsightsAsPDF(data) {
   reportEl.style.color = '#0f172a';
   reportEl.innerHTML = buildPdfReportBodyHtml(data);
 
-  const filename = `BODTUM_ODTU_Yapay_Zeka_Yonetici_Raporu_${new Date().toISOString().slice(0, 10)}.pdf`;
+  const day = new Date().toISOString().slice(0, 10);
+  const surveySlug = String(survey.title || 'anket')
+    .replace(/[ıİşŞğĞüÜöÖçÇ]/g, c => ({ 'ı': 'i', 'İ': 'i', 'ş': 's', 'Ş': 's', 'ğ': 'g', 'Ğ': 'g', 'ü': 'u', 'Ü': 'u', 'ö': 'o', 'Ö': 'o', 'ç': 'c', 'Ç': 'c' })[c])
+    .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'anket';
+  const filename = data.generic
+    ? `${surveySlug}-rapor-${day}.pdf`
+    : `BODTUM_ODTU_Yapay_Zeka_Yonetici_Raporu_${day}.pdf`;
   const opt = {
     margin: [8, 8, 8, 8],
     filename,
@@ -2390,6 +2427,14 @@ if (stageGoToInsightsBtn) stageGoToInsightsBtn.addEventListener('click', () => s
 
 const insightsBackToStageBtn = document.getElementById('insightsBackToStageBtn');
 if (insightsBackToStageBtn) insightsBackToStageBtn.addEventListener('click', () => switchAdminView('stage'));
+
+const insightsViewToggleBtn = document.getElementById('insightsViewToggleBtn');
+if (insightsViewToggleBtn) {
+  insightsViewToggleBtn.addEventListener('click', () => {
+    genericDashboardForced = !genericDashboardForced;
+    generateSurveyInsights();
+  });
+}
 
 // Auto populate button in header
 const autoPopulateBtn = document.getElementById('autoPopulateBtn');

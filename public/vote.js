@@ -333,7 +333,7 @@ function renderCurrentView(fromVoteSubmit = false) {
   if (q.type === 'single') {
     renderSingleOptions(q.options || []);
   } else if (q.type === 'multi') {
-    renderMultiOptions(q.options || []);
+    renderMultiOptions(q);
   } else if (q.type === 'scale') {
     renderScaleOptions(q);
   } else if (q.type === 'rating') {
@@ -392,8 +392,12 @@ function renderSingleOptions(options) {
 }
 
 // Multi Choice Options
-function renderMultiOptions(options) {
+function renderMultiOptions(q) {
+  const options = q.options || [];
+  // maxSelect comes from the survey definition; without it any number of options may be chosen.
+  const maxSelect = Number.isInteger(q.maxSelect) && q.maxSelect > 0 ? q.maxSelect : Infinity;
   if (!Array.isArray(selectedAnswer)) selectedAnswer = [];
+  if (selectedAnswer.length > maxSelect) selectedAnswer = selectedAnswer.slice(0, maxSelect);
 
   let html = '';
   options.forEach(opt => {
@@ -408,6 +412,16 @@ function renderMultiOptions(options) {
   voterInputArea.innerHTML = html;
 
   const buttons = voterInputArea.querySelectorAll('.voter-opt-btn');
+
+  // Once the limit is reached the remaining options are dimmed and not selectable.
+  function refreshLimitState() {
+    const full = selectedAnswer.length >= maxSelect;
+    buttons.forEach(btn => {
+      const isSelected = selectedAnswer.includes(btn.getAttribute('data-id'));
+      btn.classList.toggle('limit-reached', full && !isSelected);
+    });
+  }
+
   buttons.forEach(btn => {
     btn.addEventListener('click', () => {
       const optId = btn.getAttribute('data-id');
@@ -417,13 +431,17 @@ function renderMultiOptions(options) {
         btn.classList.remove('selected');
         btn.querySelector('.opt-circle').textContent = '';
       } else {
+        if (selectedAnswer.length >= maxSelect) return;
         selectedAnswer.push(optId);
         btn.classList.add('selected');
         btn.querySelector('.opt-circle').textContent = '✓';
       }
+      refreshLimitState();
       voterSubmitBtn.disabled = selectedAnswer.length === 0;
     });
   });
+
+  refreshLimitState();
 }
 
 // Linear Scale Options (1 to 5 Spectrum)

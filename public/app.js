@@ -11,7 +11,7 @@ function getOrCreateRoomId() {
   const params = new URLSearchParams(window.location.search);
   let room = params.get('room');
   if (!room) {
-    room = 'bodtum-' + Math.floor(1000 + Math.random() * 9000);
+    room = Pollen.newRoomId();
     const newUrl = new URL(window.location.href);
     newUrl.searchParams.set('room', room);
     window.history.replaceState({}, '', newUrl);
@@ -90,148 +90,9 @@ class AudioNotifier {
 
 const notifier = new AudioNotifier();
 
-// BODTUM ODTÜ Alumni Audience AI Survey Questions (9 Targeted Questions - Succinct & Mobile-Optimized)
-const DEFAULT_SURVEY = {
-  title: "BODTÜM & ODTÜ Yapay Zeka Kullanım ve Eğilim Anketi",
-  activeQuestionIndex: 0,
-  acceptingVotes: true,
-  questions: [
-    {
-      id: "q1",
-      type: "single",
-      title: "Yapay zekayı ne sıklıkla kullanıyorsunuz?",
-      options: [
-        { id: "opt1_1", text: "Gözlemciyim (Henüz kullanmıyorum)" },
-        { id: "opt1_2", text: "Ara sıra (Merak ettikçe / nadiren)" },
-        { id: "opt1_3", text: "Düzenli kullanıcı (Haftalık iş akışımda)" },
-        { id: "opt1_4", text: "İleri düzey uzman (Her gün işimin merkezinde)" }
-      ],
-      votes: {}
-    },
-    {
-      id: "q2",
-      type: "multi",
-      title: "Hangi yapay zeka araçlarını deneyimlediniz?",
-      subtitle: "(Birden fazla seçebilirsiniz)",
-      options: [
-        { id: "opt2_1", text: "Sohbet Modelleri (ChatGPT, Claude, Gemini)" },
-        { id: "opt2_2", text: "Arama & Araştırma (Perplexity, NotebookLM)" },
-        { id: "opt2_3", text: "Görsel & Medya (Midjourney, Suno, DALL-E)" },
-        { id: "opt2_4", text: "Ofis Asistanları (Copilot, Notion AI)" },
-        { id: "opt2_5", text: "Kod & Veri Analizi (Cursor, GitHub Copilot, Python)" },
-        { id: "opt2_6", text: "Henüz hiçbirini kullanmadım" }
-      ],
-      votes: {}
-    },
-    {
-      id: "q3",
-      type: "multi",
-      title: "En çok hangi alanda fayda sağlıyorsunuz?",
-      subtitle: "(En çok 2 seçenek belirleyin)",
-      options: [
-        { id: "opt3_1", text: "Belge özetleme, araştırma ve bilgi edinme" },
-        { id: "opt3_2", text: "Metin yazımı, raporlama ve çeviri" },
-        { id: "opt3_3", text: "Stratejik karar alma ve fikir ortaklığı" },
-        { id: "opt3_4", text: "Rutin işleri hızlandırıp zaman kazanma" },
-        { id: "opt3_5", text: "Henüz somut bir fayda sağlamadım" }
-      ],
-      votes: {}
-    },
-    {
-      id: "q4",
-      type: "scale",
-      title: "İnsanlığın geleceği için: Tehdit mi, Fırsat mı?",
-      subtitle: "(1: Büyük Tehdit — 3: Dengede — 5: Büyük Fırsat)",
-      leftLabel: "Büyük Tehdit",
-      centerLabel: "Dengede",
-      rightLabel: "Büyük Fırsat",
-      scaleLabels: [
-        "1 - Büyük Tehdit (İş kaybı ve varoluşsal risk)",
-        "2 - Tehdit Ağırlıklı",
-        "3 - Dengede (Nasıl kullandığımıza bağlı)",
-        "4 - Fırsat Ağırlıklı",
-        "5 - Büyük Fırsat (Yeni bir refah çağı)"
-      ],
-      votes: {}
-    },
-    {
-      id: "q5",
-      type: "scale",
-      title: "Yeni nesil ve eğitim: Çocuklarımız için ne ifade ediyor?",
-      subtitle: "(1: Derin Kaygı — 3: Dengeli — 5: Büyük Sıçrama)",
-      leftLabel: "Derin Kaygı",
-      centerLabel: "Dengeli",
-      rightLabel: "Büyük Sıçrama",
-      scaleLabels: [
-        "1 - Derin Kaygı (Hazırcılık / düşünme kaybı)",
-        "2 - Kaygılar Ağır Basıyor",
-        "3 - Dengeli Dönüşüm (Yeni beceriler öne çıkar)",
-        "4 - Fırsatlar Ağır Basıyor",
-        "5 - Büyük Sıçrama (Daha üretken kuşak)"
-      ],
-      votes: {}
-    },
-    {
-      id: "q6",
-      type: "scale",
-      title: "Türkiye'deki kurumlar yapay zekaya ne kadar hazır?",
-      subtitle: "(1: Çok Hazırlıksız — 3: Strateji Yok — 5: Çevik & Hazır)",
-      leftLabel: "Çok Hazırlıksız",
-      centerLabel: "Stratejisiz",
-      rightLabel: "Çevik & Hazır",
-      scaleLabels: [
-        "1 - Çok Hazırlıksız (Vizyon eksik)",
-        "2 - Geride Kalıyoruz",
-        "3 - Merak Var, Strateji Yok",
-        "4 - Ciddi İlerlemeler Var",
-        "5 - Çevik ve Hazır (Öncü liderlik)"
-      ],
-      votes: {}
-    },
-    {
-      id: "q7",
-      type: "scale",
-      title: "Yapay zeka insan aklını köreltir mi, güçlendirir mi?",
-      subtitle: "(1: Köreltir — 3: Kullanıma Bağlı — 5: Güçlendirir)",
-      leftLabel: "Köreltir",
-      centerLabel: "Kullanıma Bağlı",
-      rightLabel: "Güçlendirir",
-      scaleLabels: [
-        "1 - Köreltir (Zihinsel tembellik)",
-        "2 - Körelme Riski Ağır Basıyor",
-        "3 - Dengeli Araç (Kullanıma bağlı)",
-        "4 - Üretkenliği Artırır",
-        "5 - Güçlendirir (Zihinsel sıçrama)"
-      ],
-      votes: {}
-    },
-    {
-      id: "q8",
-      type: "single",
-      title: "Temkinli yaklaşmanıza en çok ne sebep oluyor?",
-      options: [
-        { id: "opt8_1", text: "Veri gizliliği, güvenlik ve telif kaygısı" },
-        { id: "opt8_2", text: "Yanıltıcı yanıtlar (halüsinasyon) ve teyit zorluğu" },
-        { id: "opt8_3", text: "Kendi işime nasıl entegre edeceğimi bilememek" },
-        { id: "opt8_4", text: "Yenilikleri takip etmeye zaman bulamamak" },
-        { id: "opt8_5", text: "Mesafe koymuyorum, aktif kullanıyorum" }
-      ],
-      votes: {}
-    },
-    {
-      id: "q9",
-      type: "single",
-      title: "Bugünkü buluşmadan en çok hangi kazanımla ayrılmak istersiniz?",
-      options: [
-        { id: "opt9_1", text: "İşimde hemen uygulayabileceğim somut taktikler" },
-        { id: "opt9_2", text: "Geleceğin meslekleri ve stratejik büyük resim" },
-        { id: "opt9_3", text: "Yapay zekanın nasıl çalıştığı ve sınırları" },
-        { id: "opt9_4", text: "Etik, toplum ve insanlığın geleceği" }
-      ],
-      votes: {}
-    }
-  ]
-};
+// Default survey comes from the shared Pollen schema (see pollen-core.js).
+// Surveys are plain JSON definitions; the BODTUM alumni survey is just the built-in template.
+const DEFAULT_SURVEY = Pollen.createSurvey(Pollen.templates.bodtum);
 
 // Initialize or update state (ensure latest question structure & titles overwrite cached labels)
 let survey = DEFAULT_SURVEY;
@@ -250,14 +111,6 @@ try {
     }
   }
 } catch (e) { }
-
-// Ensure opt1_4 uses concise text
-if (survey && survey.questions && survey.questions[0] && survey.questions[0].options) {
-  const opt1_4 = survey.questions[0].options.find(o => o.id === 'opt1_4');
-  if (opt1_4) {
-    opt1_4.text = "İleri düzey uzman (Her gün işimin merkezinde)";
-  }
-}
 
 if (!survey.resetEpoch) {
   survey.resetEpoch = Date.now();
@@ -384,19 +237,14 @@ function getSurveyPayload() {
     acceptingVotes: survey.acceptingVotes,
     isLive: true,
     timestamp: Date.now(),
+    // Only schema-approved fields reach participants' phones (never the raw votes of other people).
     activeQuestion: activeQ ? {
-      ...activeQ,
+      ...Pollen.publicQuestion(activeQ),
       votesCount: Object.keys(activeQ.votes || {}).length,
       results: calculateResults(activeQ)
     } : null,
     questions: survey.questions.map(q => ({
-      id: q.id,
-      type: q.type,
-      title: q.title,
-      subtitle: q.subtitle,
-      options: q.options,
-      labels: q.labels,
-      placeholder: q.placeholder,
+      ...Pollen.publicQuestion(q),
       votesCount: Object.keys(q.votes || {}).length,
       results: calculateResults(q)
     })),
@@ -2459,7 +2307,19 @@ window.addEventListener('keydown', (e) => {
   }
 });
 
+// Survey-specific wording on the QR / join screen comes from the survey definition.
+function applySurveyMeta() {
+  const badge = document.querySelector('.qr-brand-badge');
+  if (badge) {
+    badge.textContent = survey.badge || '';
+    badge.style.display = survey.badge ? '' : 'none';
+  }
+  const title = document.querySelector('.qr-main-title');
+  if (title) title.textContent = survey.shortTitle || survey.title;
+}
+
 // Boot
+applySurveyMeta();
 renderSurvey();
 switchAdminView('qr');
 connectRealtime();

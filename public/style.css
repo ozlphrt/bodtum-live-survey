@@ -3327,3 +3327,75 @@ header, .admin-header {
   .builder-phone { height: 560px; flex: none; }
   .builder-grid, .builder-grid-3 { grid-template-columns: 1fr; }
 }
+
+
+/* ==========================================================================
+   Survey import dialog
+   ========================================================================== */
+.imp-overlay {
+  position: fixed; inset: 0; z-index: 9000;
+  background: rgba(0, 0, 0, 0.72); backdrop-filter: blur(6px);
+  display: flex; align-items: center; justify-content: center; padding: 20px;
+}
+.imp-card {
+  width: 100%; max-width: 640px; max-height: 92vh; overflow-y: auto;
+  background: #151824; border: 1px solid rgba(255, 255, 255, 0.14); border-radius: 16px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.85);
+  padding: 22px 24px 18px; color: #f1f5f9;
+  display: flex; flex-direction: column; gap: 14px;
+}
+.imp-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.imp-badge { font-size: 0.72rem; font-weight: 800; letter-spacing: 0.08em; color: #60a5fa; }
+.imp-title { margin: 2px 0 0; font-size: 1.2rem; font-weight: 700; color: #fff; }
+.imp-close { background: none; border: none; color: var(--text-secondary); font-size: 1.6rem; line-height: 1; cursor: pointer; padding: 0 4px; }
+.imp-close:hover { color: #fff; }
+
+.imp-tabs { display: flex; gap: 6px; border-bottom: 1px solid var(--border); }
+.imp-tab {
+  background: none; border: none; color: var(--text-secondary); font-size: 0.85rem; font-weight: 600;
+  padding: 8px 12px; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; font-family: inherit;
+}
+.imp-tab:hover { color: #fff; }
+.imp-tab.active { color: #fff; border-bottom-color: #60a5fa; }
+
+.imp-pane { display: flex; flex-direction: column; gap: 10px; }
+.imp-drop {
+  position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center;
+  padding: 22px 12px; border: 1.5px dashed var(--border-strong); border-radius: var(--radius-md);
+  color: var(--text-secondary); font-size: 0.85rem; cursor: pointer; transition: all var(--transition);
+}
+.imp-drop strong { color: #fff; font-size: 0.92rem; }
+.imp-drop:hover, .imp-drop.over { border-color: rgba(96, 165, 250, 0.7); background: rgba(59, 130, 246, 0.07); }
+.imp-drop input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+
+.imp-text, .imp-url {
+  width: 100%; background: var(--bg); color: var(--text-primary);
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  padding: 9px 12px; font-size: 0.85rem; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  outline: none; resize: vertical;
+}
+.imp-text:focus, .imp-url:focus { border-color: var(--border-focus); }
+.imp-url-row { display: flex; gap: 8px; }
+.imp-url-row .imp-url { flex: 1; }
+.imp-help { font-size: 0.8rem; color: var(--text-tertiary); line-height: 1.5; }
+.imp-help strong, .imp-help em { color: var(--text-secondary); font-style: normal; }
+
+.imp-status { font-size: 0.85rem; color: var(--text-secondary); }
+.imp-status.error { color: #fca5a5; background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: var(--radius-sm); padding: 8px 12px; }
+
+.imp-result { display: flex; flex-direction: column; gap: 8px; }
+.imp-block { border-radius: var(--radius-md); padding: 10px 14px; font-size: 0.85rem; line-height: 1.45; border: 1px solid var(--border); }
+.imp-block ul { margin: 6px 0 0 18px; padding: 0; }
+.imp-block.error { background: rgba(239, 68, 68, 0.08); border-color: rgba(239, 68, 68, 0.35); color: #fca5a5; }
+.imp-block.warn { background: rgba(245, 158, 11, 0.08); border-color: rgba(245, 158, 11, 0.3); color: #fcd34d; }
+.imp-block.ok { background: rgba(16, 185, 129, 0.07); border-color: rgba(16, 185, 129, 0.3); }
+.imp-summary-title { font-weight: 700; color: #fff; font-size: 0.95rem; }
+.imp-summary-meta { margin-top: 4px; color: var(--text-secondary); display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.imp-chip { background: rgba(255, 255, 255, 0.07); border-radius: 999px; padding: 1px 9px; font-size: 0.75rem; }
+.imp-qlist { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: 3px; color: var(--text-secondary); }
+.imp-qlist b { display: inline-block; width: 22px; color: var(--text-tertiary); }
+.imp-qlist .more { color: var(--text-tertiary); padding-left: 22px; }
+
+.imp-templates { font-size: 0.8rem; color: var(--text-tertiary); display: flex; align-items: center; gap: 8px; }
+.imp-actions { display: flex; justify-content: flex-end; gap: 10px; padding-top: 10px; border-top: 1px solid rgba(255, 255, 255, 0.07); }
+.imp-actions .btn-inapp-confirm:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }

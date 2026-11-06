@@ -270,9 +270,17 @@
               </select>
             </div>
             <div class="builder-toolbar-right">
+              <button type="button" class="btn-secondary builder-btn" id="builderImportBtn" title="JSON, CSV, Google Sheets veya bağlantıdan anket yükle">
+                <svg class="action-mini-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                <span>İçe aktar</span>
+              </button>
               <button type="button" class="btn-secondary builder-btn" id="builderDownloadBtn" title="Anketi JSON dosyası olarak indir">
                 <svg class="action-mini-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
                 <span>JSON indir</span>
+              </button>
+              <button type="button" class="btn-secondary builder-btn" id="builderDownloadCsvBtn" title="Anketi Excel / Google Sheets için CSV olarak indir">
+                <svg class="action-mini-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                <span>CSV indir</span>
               </button>
               <button type="button" class="btn-primary builder-btn" id="builderPublishBtn" title="Anketi bu oturumda yayınla">
                 <svg class="action-mini-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
@@ -367,6 +375,59 @@
     </form>
   </dialog>
 
+  <!-- Survey import dialog (JSON / CSV / Google Sheets / link) -->
+  <div class="imp-overlay" id="importModal" style="display: none;">
+    <div class="imp-card" role="dialog" aria-modal="true" aria-labelledby="impTitle">
+      <div class="imp-head">
+        <div>
+          <div class="imp-badge">ANKET İÇE AKTAR</div>
+          <h3 class="imp-title" id="impTitle">Hazır bir anketi yükle</h3>
+        </div>
+        <button type="button" class="imp-close" id="impCloseBtn" aria-label="Kapat">×</button>
+      </div>
+
+      <div class="imp-tabs">
+        <button type="button" class="imp-tab active" data-imp-tab="file">Dosya veya metin</button>
+        <button type="button" class="imp-tab" data-imp-tab="url">Bağlantı (Google Sheets…)</button>
+      </div>
+
+      <div class="imp-pane" data-imp-pane="file">
+        <label class="imp-drop" id="impDrop">
+          <input type="file" id="impFile" accept=".json,.csv,.txt,text/csv,application/json,text/plain">
+          <strong>Dosyayı buraya bırakın</strong>
+          <span>veya seçmek için tıklayın · .json, .csv</span>
+        </label>
+        <textarea id="impText" class="imp-text" rows="5" placeholder="…ya da JSON / CSV metnini buraya yapıştırın" spellcheck="false"></textarea>
+      </div>
+
+      <div class="imp-pane" data-imp-pane="url" style="display: none;">
+        <div class="imp-url-row">
+          <input type="text" id="impUrl" class="imp-url" placeholder="https://docs.google.com/spreadsheets/d/…  veya  https://…/anket.json" spellcheck="false">
+          <button type="button" class="btn-secondary builder-btn" id="impFetchBtn">Getir</button>
+        </div>
+        <div class="imp-help">
+          <strong>Google Sheets:</strong> tabloyu <em>Paylaş → Bağlantıya sahip olan herkes (Görüntüleyen)</em> yapıp adresi yapıştırın.
+          Diğer bağlantılarda (ör. GitHub'daki ham dosya) sunucunun tarayıcıdan okumaya izin vermesi gerekir; olmazsa dosyayı indirip yükleyin.
+        </div>
+      </div>
+
+      <div class="imp-status" id="impStatus" style="display: none;"></div>
+      <div class="imp-result" id="impResult" style="display: none;"></div>
+
+      <div class="imp-templates">
+        Örnek şablon:
+        <button type="button" class="builder-link-btn" id="impTplCsv">CSV</button>
+        <span>·</span>
+        <button type="button" class="builder-link-btn" id="impTplJson">JSON</button>
+      </div>
+
+      <div class="imp-actions">
+        <button type="button" class="btn-inapp-cancel" id="impCancelBtn">Vazgeç</button>
+        <button type="button" class="btn-inapp-confirm" id="impConfirmBtn" disabled>Taslağa aktar</button>
+      </div>
+    </div>
+  </div>
+
   <!-- In-App Executive Confirmation Modal -->
   <div class="inapp-modal-overlay" id="inAppConfirmModal" style="display: none;">
     <div class="inapp-modal-card">
@@ -391,9 +452,11 @@
   <script src="./qrcode.js?v=5"></script>
   <script src="https://cdn.jsdelivr.net/npm/mqtt@5.3.5/dist/mqtt.min.js"></script>
   <script src="./html2pdf.bundle.min.js?v=2"></script>
-  <script src="./pollen-core.js?v=1"></script>
+  <script src="./pollen-core.js?v=2"></script>
+  <script src="./pollen-import.js?v=1"></script>
   <script src="./app.js?v=32"></script>
-  <script src="./builder.js?v=1"></script>
+  <script src="./builder.js?v=2"></script>
+  <script src="./builder-import.js?v=1"></script>
 </body>
 </html>
 

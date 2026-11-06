@@ -400,21 +400,16 @@
     }
   }
 
-  async function applyTemplate(kind) {
-    if (!kind) return;
-    var next;
-    if (kind === 'blank') next = blankDraft();
-    else if (kind === 'bodtum') next = fromDefinition(Pollen.templates.bodtum);
-    else if (kind === 'current') next = fromDefinition(Pollen.toDefinition(survey));
-    else return;
-
+  /** Replaces the whole draft (asks first when there is unsaved work). Resolves to true when replaced. */
+  async function replaceDraft(next, what) {
+    if (!draft) onShow();
     if (hasContent()) {
       var ok = await showInAppConfirm({
         icon: '📝', badge: 'TASLAK', title: 'Taslak değiştirilsin mi?',
-        bodyHtml: '<p>Üzerinde çalıştığınız mevcut taslağın yerine seçtiğiniz başlangıç geçecek. Bu işlem geri alınamaz.</p>',
+        bodyHtml: '<p>Üzerinde çalıştığınız mevcut taslağın yerine ' + esc(what) + ' geçecek. Bu işlem geri alınamaz.</p>',
         confirmText: 'Evet, değiştir', cancelText: 'Vazgeç', isDanger: true
       });
-      if (!ok) return;
+      if (!ok) return false;
     }
     draft = next;
     focusIndex = 0;
@@ -423,6 +418,22 @@
     renderMeta();
     changed(true);
     renderIssues();
+    return true;
+  }
+
+  async function applyTemplate(kind) {
+    if (!kind) return;
+    var next;
+    if (kind === 'blank') next = blankDraft();
+    else if (kind === 'bodtum') next = fromDefinition(Pollen.templates.bodtum);
+    else if (kind === 'current') next = fromDefinition(Pollen.toDefinition(survey));
+    else return;
+    await replaceDraft(next, 'seçtiğiniz başlangıç');
+  }
+
+  /** Loads an imported definition (already validated by PollenImport) into the editor. */
+  function importDefinition(def) {
+    return replaceDraft(fromDefinition(def), 'içe aktardığınız anket');
   }
 
   function slug(text) {
@@ -442,19 +453,29 @@
     return true;
   }
 
-  function downloadJson() {
-    if (!validOrShow()) return;
-    var def = Pollen.toDefinition(buildDefinition());
-    var blob = new Blob([JSON.stringify(def, null, 2)], { type: 'application/json' });
+  function saveBlob(blob, filename) {
     var url = URL.createObjectURL(blob);
     var a = document.createElement('a');
     a.href = url;
-    a.download = (slug(def.title) || 'anket') + '.pollen.json';
+    a.download = filename;
     document.body.appendChild(a);
     a.click();
     a.remove();
     setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
-    showToast('Anket JSON olarak indirildi.');
+  }
+
+  function downloadSurvey(kind) {
+    if (!validOrShow()) return;
+    var def = Pollen.toDefinition(buildDefinition());
+    var name = slug(def.title) || 'anket';
+    if (kind === 'csv') {
+      // BOM so Excel opens the Turkish characters correctly
+      saveBlob(new Blob(['\uFEFF' + PollenImport.toCsv(def)], { type: 'text/csv;charset=utf-8' }), name + '.pollen.csv');
+      showToast('Anket CSV olarak indirildi.');
+    } else {
+      saveBlob(new Blob([JSON.stringify(def, null, 2)], { type: 'application/json' }), name + '.pollen.json');
+      showToast('Anket JSON olarak indirildi.');
+    }
   }
 
   function runningParticipants() {
@@ -509,7 +530,8 @@
     el.main.addEventListener('focusin', onFocusIn);
 
     $('builderAddQuestionBtn').addEventListener('click', addQuestion);
-    $('builderDownloadBtn').addEventListener('click', downloadJson);
+    $('builderDownloadBtn').addEventListener('click', function () { downloadSurvey('json'); });
+    $('builderDownloadCsvBtn').addEventListener('click', function () { downloadSurvey('csv'); });
     $('builderPublishBtn').addEventListener('click', publish);
     $('builderTemplateSelect').addEventListener('change', function (e) {
       var v = e.target.value;
@@ -538,5 +560,5 @@
     }
   }
 
-  window.PollenBuilder = { onShow: onShow };
+  window.PollenBuilder = { onShow: onShow, importDefinition: importDefinition, saveBlob: saveBlob };
 })();

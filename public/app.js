@@ -90,24 +90,35 @@ class AudioNotifier {
 
 const notifier = new AudioNotifier();
 
-// Default survey comes from the shared Pollen schema (see pollen-core.js).
-// Surveys are plain JSON definitions; the BODTUM alumni survey is just the built-in template.
-const DEFAULT_SURVEY = Pollen.createSurvey(Pollen.templates.bodtum);
+// The running survey is a plain JSON definition (see pollen-core.js). Until the host publishes
+// another one from the builder tab, the built-in BODTUM alumni survey is used.
+const SURVEY_DEF_KEY = `pollen_survey_def_${roomId}`;
 
-// Initialize or update state (ensure latest question structure & titles overwrite cached labels)
-let survey = DEFAULT_SURVEY;
+function loadActiveDefinition() {
+  try {
+    const raw = localStorage.getItem(SURVEY_DEF_KEY);
+    if (!raw) return null;
+    const def = JSON.parse(raw);
+    return Pollen.validateSurvey(def).length === 0 ? def : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+let survey = Pollen.createSurvey(loadActiveDefinition() || Pollen.templates.bodtum);
+
+// Restore the votes collected so far (matched by question id)
 try {
   const saved = localStorage.getItem(`survey_state_${roomId}`);
   if (saved) {
     const parsed = JSON.parse(saved);
     if (parsed.questions && Array.isArray(parsed.questions)) {
-      DEFAULT_SURVEY.questions.forEach(defQ => {
+      survey.questions.forEach(defQ => {
         const matched = parsed.questions.find(pq => pq.id === defQ.id);
         if (matched && matched.votes) {
           defQ.votes = matched.votes;
         }
       });
-      survey = DEFAULT_SURVEY;
     }
   }
 } catch (e) { }
@@ -121,6 +132,40 @@ let activeParticipants = new Set();
 
 function saveSurvey() {
   localStorage.setItem(`survey_state_${roomId}`, JSON.stringify(survey));
+}
+
+// True while the running survey has the structure the built-in BODTUM dashboard understands.
+function isBodtumCompatible() {
+  const tpl = Pollen.templates.bodtum.questions;
+  if (survey.questions.length !== tpl.length) return false;
+  return tpl.every((tq, i) => {
+    const q = survey.questions[i];
+    if (q.id !== tq.id || q.type !== tq.type) return false;
+    if (!tq.options) return true;
+    return (q.options || []).map(o => o.id).join('|') === tq.options.map(o => o.id).join('|');
+  });
+}
+
+// Replaces the running survey with a new definition. All votes and participants are reset and the
+// new survey is pushed to every connected phone.
+function loadSurveyDefinition(definition) {
+  const next = Pollen.createSurvey(definition); // throws on an invalid definition
+  next.resetEpoch = Date.now();
+  survey = next;
+  activeParticipants.clear();
+  if (participantCount) participantCount.textContent = '0';
+  const qrPartCount = document.getElementById('qrParticipantCount');
+  if (qrPartCount) qrPartCount.textContent = '0';
+
+  localStorage.setItem(SURVEY_DEF_KEY, JSON.stringify(Pollen.toDefinition(survey)));
+  saveSurvey();
+  applySurveyMeta();
+  if (mqttClient && mqttClient.connected) {
+    mqttClient.publish(`bodtum/survey/${roomId}/reset`, JSON.stringify({ resetEpoch: survey.resetEpoch, roomId }), { qos: 1 });
+  }
+  broadcastState();
+  renderSurvey();
+  if (currentAdminView === 'insights') generateSurveyInsights();
 }
 
 // Calculate Aggregated Results
@@ -182,13 +227,7 @@ function calculateResults(q) {
       }
     });
     const average = totalVotes > 0 ? (sum / totalVotes).toFixed(1) : "0.0";
-    const labels = q.scaleLabels || [
-      "1 - Kesinlikle Tehdit",
-      "2 - Tehdit Ağırlıklı",
-      "3 - Kullanım Amacına Bağlı",
-      "4 - Fırsat Ağırlıklı",
-      "5 - Kesinlikle Büyük Fırsat"
-    ];
+    const labels = q.scaleLabels || Pollen.defaultScaleLabels(q);
     const breakdown = [1, 2, 3, 4, 5].map(val => ({
       value: val,
       label: labels[val - 1] || `${val}`,
@@ -231,6 +270,10 @@ function getSurveyPayload() {
   const activeQ = survey.questions[survey.activeQuestionIndex];
   return {
     title: survey.title,
+    shortTitle: survey.shortTitle,
+    badge: survey.badge,
+    description: survey.description,
+    logo: survey.logo,
     resetEpoch: survey.resetEpoch || 1,
     activeQuestionIndex: survey.activeQuestionIndex,
     totalQuestions: survey.questions.length,
@@ -1042,6 +1085,29 @@ function generateDiverseAlumniBatch(count = 15) {
   return batch;
 }
 
+// Random but valid demo answers for surveys that are not the BODTUM one.
+function generateGenericBatch(count) {
+  const WORDS = ['hız', 'kalite', 'maliyet', 'güven', 'yenilik', 'eğitim', 'verimlilik', 'iş birliği'];
+  const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+  const shuffled = arr => arr.map(v => [Math.random(), v]).sort((a, b) => a[0] - b[0]).map(x => x[1]);
+  return Array.from({ length: count }, () => {
+    const profile = {};
+    survey.questions.forEach(q => {
+      if (q.type === 'single') {
+        profile[q.id] = pick(q.options).id;
+      } else if (q.type === 'multi') {
+        const max = q.maxSelect || Math.min(3, q.options.length);
+        profile[q.id] = shuffled(q.options.map(o => o.id)).slice(0, 1 + Math.floor(Math.random() * max));
+      } else if (q.type === 'scale' || q.type === 'rating') {
+        profile[q.id] = Math.min(5, Math.max(1, Math.round(3 + (Math.random() + Math.random() - 1) * 2.4)));
+      } else if (q.type === 'wordcloud') {
+        profile[q.id] = pick(WORDS);
+      }
+    });
+    return profile;
+  });
+}
+
 async function autoPopulateResponses(count = 15) {
   const confirmed = await showInAppConfirm({
     icon: '⚠️',
@@ -1061,7 +1127,7 @@ async function autoPopulateResponses(count = 15) {
 
   if (!confirmed) return;
 
-  const dynamicBatch = generateDiverseAlumniBatch(count);
+  const dynamicBatch = isBodtumCompatible() ? generateDiverseAlumniBatch(count) : generateGenericBatch(count);
 
   dynamicBatch.forEach((profile, idx) => {
     const voterId = `alumni_sim_${Date.now()}_${Math.random().toString(36).substr(2, 6)}_${idx + 1}`;
@@ -1163,10 +1229,45 @@ function buildRadarChartSvg(q4, q5, q6, q7) {
 // ----------------------------------------------------
 let activeInsightsCohort = 'all';
 
+// Surveys built in the builder do not have the BODTUM-specific cockpit yet; they still get
+// live results on the stage and a per-question PDF report.
+function renderGenericInsightsPlaceholder(body) {
+  const voters = new Set();
+  survey.questions.forEach(q => Object.keys(q.votes || {}).forEach(v => voters.add(v)));
+  body.innerHTML = `
+    <div style="text-align: center; padding: 60px 24px; background: var(--surface); border-radius: var(--radius-xl); border: 1px solid var(--border); max-width: 560px; margin: 60px auto;">
+      <h2 style="font-size: 1.35rem; font-weight: 700; color: #fff; margin-bottom: 8px;">${escapeHtml(survey.title)}</h2>
+      <p style="color: var(--text-secondary); font-size: 0.92rem; line-height: 1.55; margin-bottom: 6px;">
+        <strong style="color: #fff;">${voters.size}</strong> katılımcı · <strong style="color: #fff;">${survey.questions.length}</strong> soru
+      </p>
+      <p style="color: var(--text-secondary); font-size: 0.88rem; line-height: 1.55; margin-bottom: 4px;">
+        Çapraz analiz ve otomatik içgörü paneli bu anket türü için hazırlanıyor.
+      </p>
+      <p style="color: var(--text-secondary); font-size: 0.88rem; line-height: 1.55;">
+        Şimdilik canlı sonuçları <strong style="color: #fff;">Canlı Sahne</strong> sekmesinde görebilir, soru bazlı sonuçları PDF olarak indirebilirsiniz.
+      </p>
+    </div>`;
+
+  const pdfBtn = document.getElementById('copyInsightsMarkdownBtn');
+  if (pdfBtn) {
+    pdfBtn.onclick = () => exportInsightsAsPDF({
+      generic: true,
+      dateStr: new Date().toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' }),
+      roomCode: roomId,
+      totalAllVotes: voters.size
+    });
+  }
+}
+
 function generateSurveyInsights(cohortFilter = activeInsightsCohort) {
   activeInsightsCohort = cohortFilter;
   const body = document.getElementById('insightsFullPageBody');
   if (!body) return;
+
+  if (!isBodtumCompatible()) {
+    renderGenericInsightsPlaceholder(body);
+    return;
+  }
 
   // Gather unique voter IDs across all survey questions
   const allVoterIds = new Set();
@@ -1198,7 +1299,6 @@ function generateSurveyInsights(cohortFilter = activeInsightsCohort) {
         generateSurveyInsights();
       };
     }
-    overlay.classList.remove('hidden');
     return;
   }
 
@@ -1938,7 +2038,30 @@ function renderPdfQuestionResultsHtml(q, idx) {
   `;
 }
 
+function buildGenericPdfBodyHtml(data) {
+  return `
+  <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; color: #0f172a; background: #ffffff; padding: 24px 30px; font-size: 9.5pt; line-height: 1.45;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 3px solid #c8102e; padding-bottom: 12px; margin-bottom: 16px;">
+      <div>
+        <div style="font-size: 17pt; font-weight: 900; color: #0f172a; letter-spacing: -0.02em;">${escapeHtml(survey.title)}</div>
+        ${survey.badge ? `<div style="font-size: 9.5pt; font-weight: 600; color: #475569; margin-top: 3px;">${escapeHtml(survey.badge)}</div>` : ''}
+      </div>
+      <div style="text-align: right; font-size: 8.5pt; color: #64748b; line-height: 1.5;">
+        <div><strong>Tarih:</strong> ${data.dateStr}</div>
+        <div><strong>Katılımcı Sayısı:</strong> ${data.totalAllVotes}</div>
+        <div><strong>Oturum Kodu:</strong> ${data.roomCode}</div>
+      </div>
+    </div>
+    ${survey.questions.map((q, idx) => renderPdfQuestionResultsHtml(q, idx)).join('')}
+    <div style="border-top: 1px solid #cbd5e1; padding-top: 8px; margin-top: 14px; font-size: 7.5pt; color: #94a3b8;">
+      Pollen — Canlı Anket Platformu · Rapor Oluşturulma Saati: ${new Date().toLocaleTimeString('tr-TR')}
+    </div>
+  </div>
+  `;
+}
+
 function buildPdfReportBodyHtml(data) {
+  if (data.generic) return buildGenericPdfBodyHtml(data);
   return `
   <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; color: #0f172a; background: #ffffff; padding: 24px 30px; font-size: 9.5pt; line-height: 1.45;">
     <!-- Report Header -->
@@ -2220,7 +2343,7 @@ function openPrintWindowFallback(data) {
 // ----------------------------------------------------
 // 3-Page Executive View Navigation System
 // ----------------------------------------------------
-let currentAdminView = 'qr'; // 'qr' | 'stage' | 'insights'
+let currentAdminView = 'qr'; // 'qr' | 'stage' | 'insights' | 'builder'
 
 function switchAdminView(viewName) {
   currentAdminView = viewName;
@@ -2242,16 +2365,21 @@ function switchAdminView(viewName) {
     const qrCount = document.getElementById('qrParticipantCount');
     if (qrCount) qrCount.textContent = activeParticipants.size;
   }
+  if (viewName === 'builder' && window.PollenBuilder) {
+    window.PollenBuilder.onShow();
+  }
 }
 
 // Header Tabs
 const tabBtnQr = document.getElementById('tabBtnQr');
 const tabBtnStage = document.getElementById('tabBtnStage');
 const tabBtnInsights = document.getElementById('tabBtnInsights');
+const tabBtnBuilder = document.getElementById('tabBtnBuilder');
 
 if (tabBtnQr) tabBtnQr.addEventListener('click', () => switchAdminView('qr'));
 if (tabBtnStage) tabBtnStage.addEventListener('click', () => switchAdminView('stage'));
 if (tabBtnInsights) tabBtnInsights.addEventListener('click', () => switchAdminView('insights'));
+if (tabBtnBuilder) tabBtnBuilder.addEventListener('click', () => switchAdminView('builder'));
 
 // In-Page Navigation Buttons
 const qrStartQuestionsBtn = document.getElementById('qrStartQuestionsBtn');
@@ -2285,6 +2413,8 @@ window.addEventListener('keydown', (e) => {
     switchAdminView('stage');
   } else if (e.key === '3') {
     switchAdminView('insights');
+  } else if (e.key === '4') {
+    switchAdminView('builder');
   } else if (e.key === 'ArrowLeft' && currentAdminView === 'stage') {
     if (survey.activeQuestionIndex > 0) {
       survey.activeQuestionIndex--;

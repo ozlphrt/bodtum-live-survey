@@ -125,4 +125,61 @@ test('room ids look like pollen-xxxxxx and rarely collide', () => {
   assert.strictEqual(ids.size, 500);
 });
 
+test('description and the built-in logo flag are kept; unknown logos are dropped', () => {
+  const def = minimal();
+  def.description = '  Dokunarak yanıtlayın.  ';
+  def.logo = 'bodtum';
+  const s = Pollen.normalizeSurvey(def);
+  assert.strictEqual(s.description, 'Dokunarak yanıtlayın.');
+  assert.strictEqual(s.logo, 'bodtum');
+  def.logo = 'evil.png';
+  assert.ok(!('logo' in Pollen.normalizeSurvey(def)));
+  assert.strictEqual(Pollen.toDefinition(Pollen.createSurvey(Object.assign(minimal(), { description: 'x' }))).description, 'x');
+});
+
+test('scale questions always get five level labels derived from their anchors', () => {
+  const q = Pollen.createSurvey(minimal()).questions[2];
+  assert.deepStrictEqual(q.scaleLabels, ['1 - Low', '2', '3 - Orta', '4', '5 - High']);
+  assert.deepStrictEqual(Pollen.defaultScaleLabels({}), ['1 - Çok düşük', '2', '3 - Orta', '4', '5 - Çok yüksek']);
+});
+
+test('explicit scale labels are preserved, partial ones are ignored', () => {
+  const def = minimal();
+  def.questions[2].scaleLabels = ['a', 'b', 'c', 'd', 'e'];
+  assert.deepStrictEqual(Pollen.normalizeSurvey(def).questions[2].scaleLabels, ['a', 'b', 'c', 'd', 'e']);
+  def.questions[2].scaleLabels = ['a', 'b'];
+  assert.strictEqual(Pollen.normalizeSurvey(def).questions[2].scaleLabels.length, 5);
+});
+
+test('option ids stay unique inside a question even after reordering', () => {
+  const def = {
+    title: 'x',
+    questions: [{ type: 'single', title: 'q', options: [{ id: 'opt1_2', text: 'a' }, { id: 'opt1_2', text: 'b' }, 'c'] }]
+  };
+  const ids = Pollen.normalizeSurvey(def).questions[0].options.map(o => o.id);
+  assert.strictEqual(new Set(ids).size, 3);
+});
+
+test('rating and wordcloud questions need no options', () => {
+  const s = Pollen.createSurvey({
+    title: 'x',
+    questions: [{ type: 'rating', title: 'r' }, { type: 'wordcloud', title: 'w', placeholder: ' tek kelime ' }]
+  });
+  assert.ok(!('options' in s.questions[0]));
+  assert.strictEqual(s.questions[1].placeholder, 'tek kelime');
+});
+
+test('re-creating the BODTUM template from a definition without ids keeps ids positional', () => {
+  const stripped = JSON.parse(JSON.stringify(Pollen.templates.bodtum));
+  stripped.questions.forEach(q => { delete q.id; (q.options || []).forEach(o => delete o.id); });
+  const rebuilt = Pollen.createSurvey(stripped);
+  const original = Pollen.createSurvey(Pollen.templates.bodtum);
+  assert.deepStrictEqual(rebuilt.questions.map(q => q.id), original.questions.map(q => q.id));
+  assert.deepStrictEqual(
+    rebuilt.questions.map(q => (q.options || []).map(o => o.id)),
+    original.questions.map(q => (q.options || []).map(o => o.id))
+  );
+});
+
 console.log('\n' + passed + ' passed' + (process.exitCode ? ', some FAILED' : ''));
+

@@ -11,6 +11,8 @@
  *   "title": "Full survey title",            // required
  *   "shortTitle": "Shown on the QR screen",  // optional
  *   "badge": "Organisation / event label",   // optional
+ *   "description": "Short instructions shown to participants above the first question", // optional
+ *   "logo": "bodtum",                        // optional: built-in logo set for the phone header
  *   "questions": [
  *     {
  *       "id": "q1",                          // optional, generated when missing
@@ -40,6 +42,7 @@
   var SCHEMA_VERSION = 'pollen.survey.v1';
   var QUESTION_TYPES = ['single', 'multi', 'scale', 'rating', 'wordcloud'];
   var CHOICE_TYPES = ['single', 'multi'];
+  var LOGOS = ['bodtum'];
 
   // Fields of a question that are safe to send to participants' phones.
   // Votes of other people and the dashboard-only tag are deliberately absent.
@@ -60,6 +63,18 @@
     if (!Array.isArray(arr) || arr.length !== 5) return null;
     var out = arr.map(text);
     return out.every(Boolean) ? out : null;
+  }
+
+  /** Five level labels for a scale question, derived from its anchors when not given explicitly. */
+  function defaultScaleLabels(q) {
+    q = q || {};
+    return [
+      '1 - ' + (text(q.leftLabel) || 'Çok düşük'),
+      '2',
+      '3 - ' + (text(q.centerLabel) || 'Orta'),
+      '4',
+      '5 - ' + (text(q.rightLabel) || 'Çok yüksek')
+    ];
   }
 
   /** Returns a list of human readable (Turkish) problems; empty when the definition is valid. */
@@ -133,11 +148,16 @@
 
       if (CHOICE_TYPES.indexOf(type) !== -1) {
         var j = 0;
+        var usedOptionIds = {};
         out.options = (Array.isArray(q.options) ? q.options : [])
           .filter(optionText)
           .map(function (o) {
             j++;
             var oid = o && typeof o === 'object' && text(o.id) ? text(o.id) : 'opt' + num + '_' + j;
+            var obase = oid;
+            var obump = 2;
+            while (usedOptionIds[oid]) oid = obase + '_' + obump++;
+            usedOptionIds[oid] = true;
             return { id: oid, text: optionText(o) };
           });
         if (type === 'multi') {
@@ -148,8 +168,7 @@
         if (text(q.leftLabel)) out.leftLabel = text(q.leftLabel);
         if (text(q.centerLabel)) out.centerLabel = text(q.centerLabel);
         if (text(q.rightLabel)) out.rightLabel = text(q.rightLabel);
-        var sl = fiveStrings(q.scaleLabels);
-        if (sl) out.scaleLabels = sl;
+        out.scaleLabels = fiveStrings(q.scaleLabels) || defaultScaleLabels(out);
       } else if (type === 'rating') {
         var rl = fiveStrings(q.labels);
         if (rl) out.labels = rl;
@@ -165,6 +184,8 @@
     var survey = { title: text(raw.title) };
     if (text(raw.shortTitle)) survey.shortTitle = text(raw.shortTitle);
     if (text(raw.badge)) survey.badge = text(raw.badge);
+    if (text(raw.description)) survey.description = text(raw.description);
+    if (LOGOS.indexOf(raw.logo) !== -1) survey.logo = raw.logo;
     survey.questions = questions;
     return survey;
   }
@@ -211,6 +232,7 @@
       "title": "BODTÜM & ODTÜ Yapay Zeka Kullanım ve Eğilim Anketi",
       "shortTitle": "Yapay Zeka Anketi",
       "badge": "BODTÜM & ODTÜ MEZUNLARI DERNEĞİ",
+      "logo": "bodtum",
       "questions": [
         {
           "id": "q1",
@@ -432,6 +454,7 @@
     createSurvey: createSurvey,
     toDefinition: toDefinition,
     publicQuestion: publicQuestion,
+    defaultScaleLabels: defaultScaleLabels,
     newRoomId: newRoomId
   };
 });

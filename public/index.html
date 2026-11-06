@@ -51,6 +51,13 @@
         </svg>
         <span class="tab-text">Analiz & Rapor</span>
       </button>
+      <button type="button" class="view-tab-btn" data-view="builder" id="tabBtnBuilder" title="Yeni anket oluştur veya düzenle (Kısayol: 4)">
+        <svg class="tab-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 20h9"></path>
+          <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+        </svg>
+        <span class="tab-text">Anket Oluştur</span>
+      </button>
     </nav>
 
     <!-- Header Actions Right -->
@@ -248,6 +255,78 @@
       </div>
     </section>
 
+    <!-- PAGE D: Survey Builder (create / edit / publish a survey) -->
+    <section id="view-builder" class="admin-page-view">
+      <div class="builder-layout">
+        <div class="builder-main" id="builderMain">
+          <div class="builder-toolbar">
+            <div class="builder-toolbar-left">
+              <label class="builder-toolbar-label" for="builderTemplateSelect">Başlangıç</label>
+              <select id="builderTemplateSelect" class="builder-select">
+                <option value="">Şablon seç…</option>
+                <option value="current">Şu an çalışan anket</option>
+                <option value="blank">Boş anket</option>
+                <option value="bodtum">BODTÜM Yapay Zeka Anketi (hazır şablon)</option>
+              </select>
+            </div>
+            <div class="builder-toolbar-right">
+              <button type="button" class="btn-secondary builder-btn" id="builderDownloadBtn" title="Anketi JSON dosyası olarak indir">
+                <svg class="action-mini-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                <span>JSON indir</span>
+              </button>
+              <button type="button" class="btn-primary builder-btn" id="builderPublishBtn" title="Anketi bu oturumda yayınla">
+                <svg class="action-mini-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                <span>Anketi Yayınla</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="builder-issues" id="builderIssues" style="display: none;"></div>
+
+          <div class="builder-card">
+            <div class="builder-card-title">Anket Bilgileri</div>
+            <div class="builder-grid">
+              <label class="builder-field builder-field-wide">
+                <span>Anket adı <em>zorunlu</em></span>
+                <input type="text" data-meta="title" maxlength="140" placeholder="Örn. Yapay Zeka Kullanım Anketi">
+              </label>
+              <label class="builder-field">
+                <span>Kısa başlık <small>QR ekranında görünür</small></span>
+                <input type="text" data-meta="shortTitle" maxlength="60" placeholder="Örn. Yapay Zeka Anketi">
+              </label>
+              <label class="builder-field">
+                <span>Etiket / kurum <small>isteğe bağlı</small></span>
+                <input type="text" data-meta="badge" maxlength="60" placeholder="Örn. ODTÜ MEZUNLARI DERNEĞİ">
+              </label>
+              <label class="builder-field builder-field-wide">
+                <span>Katılımcıya kısa yönerge <small>ilk sorunun üstünde görünür</small></span>
+                <textarea data-meta="description" rows="2" maxlength="280" placeholder="Örn. Her soruya dokunarak yanıt verin. Yanıtlar anonimdir."></textarea>
+              </label>
+              <label class="builder-check builder-field-wide" id="builderLogoRow" style="display: none;">
+                <input type="checkbox" id="builderLogoToggle">
+                <span>Telefon ekranında ODTÜ · BODTÜM logolarını göster</span>
+              </label>
+            </div>
+          </div>
+
+          <div id="builderQuestions"></div>
+
+          <button type="button" class="builder-add-question" id="builderAddQuestionBtn">
+            <svg class="action-mini-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            <span>Soru ekle</span>
+          </button>
+        </div>
+
+        <aside class="builder-preview">
+          <div class="builder-preview-label">Canlı telefon önizlemesi</div>
+          <div class="builder-phone">
+            <iframe id="builderPreviewFrame" title="Telefon önizlemesi" src="./vote.html?preview=1&room=preview"></iframe>
+          </div>
+          <div class="builder-preview-hint">Önizlemedeki yanıtlar kaydedilmez.</div>
+        </aside>
+      </div>
+    </section>
+
   </main>
 
   <!-- Mobile Phone Simulator Drawer -->
@@ -313,7 +392,8 @@
   <script src="https://cdn.jsdelivr.net/npm/mqtt@5.3.5/dist/mqtt.min.js"></script>
   <script src="./html2pdf.bundle.min.js?v=2"></script>
   <script src="./pollen-core.js?v=1"></script>
-  <script src="./app.js?v=31"></script>
+  <script src="./app.js?v=32"></script>
+  <script src="./builder.js?v=1"></script>
 </body>
 </html>
 

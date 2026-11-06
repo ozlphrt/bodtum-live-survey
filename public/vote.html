@@ -43,6 +43,14 @@
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
     }
 
+    /* Text-only brand (surveys without a built-in logo set): no white logo pill */
+    .voter-brand.is-text {
+      background: none;
+      border-color: transparent;
+      box-shadow: none;
+      padding: 5px 0;
+    }
+
     .voter-card {
       background: var(--surface);
       border: 1px solid var(--border);
@@ -111,6 +119,29 @@
     .voter-opt-btn.limit-reached {
       opacity: 0.4;
       cursor: not-allowed;
+    }
+
+    .voter-brand-text {
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: #fff;
+      letter-spacing: -0.01em;
+      max-width: 52vw;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      display: block;
+    }
+
+    .voter-intro {
+      background: rgba(59, 130, 246, 0.08);
+      border: 1px solid rgba(59, 130, 246, 0.22);
+      color: var(--text-secondary);
+      border-radius: var(--radius-md);
+      padding: 10px 14px;
+      font-size: 0.85rem;
+      line-height: 1.45;
+      margin-bottom: 12px;
     }
 
     .opt-circle {
@@ -504,10 +535,8 @@
   <div class="voter-container">
     <!-- Clean Header -->
     <header class="voter-header" style="background: none; border-bottom: 1px solid var(--border); padding: 0 0 16px 0;">
-      <div class="voter-brand">
-        <img src="./odtu-logo.png" alt="ODTÜ" style="height: 26px; width: auto; display: block;">
-        <div style="width: 1px; height: 18px; background: #e2e8f0;"></div>
-        <img src="./bodtum-logo.png" alt="BODTÜM" style="height: 26px; width: auto; display: block;">
+      <div class="voter-brand is-text" id="voterBrand">
+        <span class="voter-brand-text">Pollen</span>
       </div>
       <div class="pill" id="voterProgressTag" style="padding: 4px 10px; font-size: 0.75rem;">Kontrol ediliyor...</div>
     </header>
@@ -575,6 +604,7 @@
 
     <!-- 3. Active Question View -->
     <div id="activeQuestionView" style="display: none;">
+      <div class="voter-intro" id="voterIntro" style="display: none;"></div>
       <div class="voter-card">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
           <span class="pill" id="voterQIndexTag" style="font-size: 0.75rem; padding: 2px 8px;">Soru 1 / 3</span>
@@ -633,6 +663,6 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/mqtt@5.3.5/dist/mqtt.min.js"></script>
-  <script src="./vote.js?v=20261106_1"></script>
+  <script src="./vote.js?v=20261106_3"></script>
 </body>
 </html>

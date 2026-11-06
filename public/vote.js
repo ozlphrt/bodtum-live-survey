@@ -17,6 +17,11 @@ if (!voterId) {
   localStorage.setItem('bodtum_voter_id', voterId);
 }
 
+// Preview mode: the presenter's survey builder embeds this page in an iframe and feeds it a draft
+// survey via postMessage. Nothing is stored or published, and no broker connection is made.
+const isPreview = urlParams.get('preview') === '1';
+const previewVotes = {};
+
 // State
 let currentSurvey = null;
 let userQuestionIndex = 0;
@@ -67,6 +72,7 @@ if (inactiveRoomCode) {
 
 // Local Storage Helpers
 function getStoredVotes() {
+  if (isPreview) return previewVotes;
   try {
     return JSON.parse(localStorage.getItem(`bodtum_votes_${roomId}`) || '{}');
   } catch (e) {
@@ -75,6 +81,10 @@ function getStoredVotes() {
 }
 
 function saveStoredVote(questionId, answer) {
+  if (isPreview) {
+    previewVotes[questionId] = answer;
+    return;
+  }
   const stored = getStoredVotes();
   stored[questionId] = answer;
   localStorage.setItem(`bodtum_votes_${roomId}`, JSON.stringify(stored));
@@ -146,10 +156,32 @@ function getSurveyQuestions(state) {
   return [];
 }
 
+// Header branding: built-in logo set, or the survey's own short title.
+let lastBrandKey = null;
+function applyVoterMeta(state) {
+  const brand = document.getElementById('voterBrand');
+  if (!brand) return;
+  const key = state.logo === 'bodtum' ? 'logo:bodtum' : 'text:' + (state.shortTitle || state.title || '');
+  if (key !== lastBrandKey) {
+    lastBrandKey = key;
+    brand.classList.toggle('is-text', state.logo !== 'bodtum');
+    if (state.logo === 'bodtum') {
+      brand.innerHTML =
+        '<img src="./odtu-logo.png" alt="ODTÜ" style="height: 26px; width: auto; display: block;">' +
+        '<div style="width: 1px; height: 18px; background: #e2e8f0;"></div>' +
+        '<img src="./bodtum-logo.png" alt="BODTÜM" style="height: 26px; width: auto; display: block;">';
+    } else {
+      brand.innerHTML = '<span class="voter-brand-text">' + escapeHtml(state.shortTitle || state.title || 'Pollen') + '</span>';
+    }
+  }
+  if (state.title) document.title = state.title + ' | Pollen';
+}
+
 // Main handler for incoming survey state
 function handleSurveyState(state) {
   currentSurvey = state;
   isLiveActive = true;
+  applyVoterMeta(state);
 
   if (surveyLoadingView) surveyLoadingView.style.display = 'none';
   if (surveyInactiveView) surveyInactiveView.style.display = 'none';
@@ -308,6 +340,13 @@ function renderCurrentView(fromVoteSubmit = false) {
     } else {
       onStageBadge.style.display = 'none';
     }
+  }
+
+  const intro = document.getElementById('voterIntro');
+  if (intro) {
+    const showIntro = !!currentSurvey.description && userQuestionIndex === 0;
+    intro.textContent = showIntro ? currentSurvey.description : '';
+    intro.style.display = showIntro ? 'block' : 'none';
   }
 
   if (voterQTitle) voterQTitle.textContent = q.title;
@@ -857,6 +896,7 @@ function connectRealtime(brokerIndex = 0) {
 }
 
 function publishVote(questionId, answer) {
+  if (isPreview) return;
   if (mqttClient && mqttClient.connected) {
     const payload = JSON.stringify({ questionId, answer, voterId });
     mqttClient.publish(TOPIC_VOTE, payload, { qos: 1 });
@@ -887,6 +927,39 @@ if (retryConnectionBtn) {
   });
 }
 
+// Draft survey pushed by the builder (same-origin iframe only)
+function handlePreviewMessage(e) {
+  if (e.origin !== window.location.origin) return;
+  const msg = e.data;
+  if (!msg || msg.type !== 'pollen-preview' || !msg.state) return;
+
+  if (msg.reset) {
+    Object.keys(previewVotes).forEach(k => delete previewVotes[k]);
+    viewingCompleted = false;
+  }
+  currentSurvey = msg.state;
+  isLiveActive = true;
+  applyVoterMeta(msg.state);
+  if (surveyLoadingView) surveyLoadingView.style.display = 'none';
+  if (surveyInactiveView) surveyInactiveView.style.display = 'none';
+  if (lockedView) lockedView.style.display = 'none';
+
+  const questions = getSurveyQuestions(msg.state);
+  if (questions.length === 0) return;
+  const idx = Number.isInteger(msg.focusIndex) ? msg.focusIndex : 0;
+  userQuestionIndex = Math.min(Math.max(idx, 0), questions.length - 1);
+  viewingCompleted = false;
+  editingAnswer = false;
+  justVoted = false;
+  initialQuestionSet = true;
+  renderCurrentView();
+}
+
 // Boot
-startLiveDetectionTimer(5000);
-connectRealtime();
+if (isPreview) {
+  window.addEventListener('message', handlePreviewMessage);
+  if (window.parent !== window) window.parent.postMessage({ type: 'pollen-preview-ready' }, window.location.origin);
+} else {
+  startLiveDetectionTimer(5000);
+  connectRealtime();
+}
